@@ -29,3 +29,6 @@ SIMULATIE_WHATSAPP = _bool("SIMULATIE_WHATSAPP", True)
 SIMULATIE_AGENDA = _bool("SIMULATIE_AGENDA", True)
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+
+# Database met het actielog.
+DB_PAD = os.getenv("DB_PAD", str(ROOT / "omnia.db"))

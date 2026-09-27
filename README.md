@@ -39,7 +39,7 @@ Staat die op `true`, dan wordt de dienst nagebootst en werkt de demo zonder acco
 ## Bouwvolgorde
 
 1. Landingspagina ✅
-2. US-2 Gaslucht gaat altijd voor
+2. US-2 Gaslucht gaat altijd voor ✅ (`/demo/gas`, plannerscherm los op `/planner`)
 3. US-5 Demoscherm met logboek en rekensom
 4. US-3 Storing uitlezen uit foto en tekst
 5. US-4 Planningsvoorstel in een demo-agenda

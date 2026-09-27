@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block titel %}OMNIA · {% if met_telefoon %}Gaslucht gaat altijd voor{% else %}Plannerscherm{% endif %}{% endblock %}
+{% block inhoud %}
+<header class="balk">
+  <div class="wrap balk-inhoud">
+    <a href="/" class="balk-logo"><img src="{{ url_for('static', path='img/omnia-mark.webp') }}" alt=""> OMNIA</a>
+    <span class="balk-titel">{% if met_telefoon %}US-2 · Gaslucht gaat altijd voor{% else %}Plannerscherm · {{ bedrijfsnaam }}{% endif %}</span>
+    <button class="knop knop-klein knop-licht" id="reset" type="button">Reset</button>
+  </div>
+</header>
+
+<main class="wrap demo {% if met_telefoon %}demo-twee{% endif %}">
+  {% if met_telefoon %}
+  <section class="telefoon" aria-label="Telefoon van de klant">
+    <div class="telefoon-kop">
+      <strong>{{ bedrijfsnaam }}</strong>
+      <span>WhatsApp · gesimuleerd</span>
+    </div>
+    <div class="chat" id="chat">
+      <p class="chat-leeg">Stuur een bericht als klant.</p>
+    </div>
+    <div class="snel">
+      <button type="button" data-tekst="ik ruik gas">ik ruik gas</button>
+      <button type="button" data-tekst="gaslucth in de keuken">gaslucth in de keuken</button>
+      <button type="button" data-tekst="Remeha ketel geeft F28, geen warm water">ketel geeft F28</button>
+    </div>
+    <form class="invoer" id="invoer">
+      <input id="tekst" autocomplete="off" placeholder="Typ een bericht…" aria-label="Bericht">
+      <button class="knop" type="submit">Stuur</button>
+    </form>
+  </section>
+  {% endif %}
+
+  <section class="planner" aria-label="Plannerscherm">
+    <h2>Plannerscherm</h2>
+    <div id="alarm" class="alarm" hidden>
+      <div class="alarm-kop">Gasmelding · niet in de gewone rij</div>
+      <div id="alarm-lijst"></div>
+    </div>
+
+    <h3>Gewone rij</h3>
+    <ul class="rij" id="rij"><li class="leeg">Nog geen meldingen.</li></ul>
+
+    {% if met_telefoon %}
+    <details class="uitleg">
+      <summary>Hoe werkt het?</summary>
+      <p>Elk bericht gaat eerst langs een vaste woordenlijst (gas, gaslucht, ruik gas en varianten, ook met tikfouten).
+         Dat gebeurt vóór elke AI-stap en zonder taalmodel, dus het werkt ook als de AI-dienst plat ligt.
+         Bij een treffer krijgt de klant direct 0800-9009 en een veiligheidstekst, en komt de melding hier bovenaan.</p>
+    </details>
+    {% endif %}
+  </section>
+</main>
+
+<script>
+const chat = document.getElementById("chat");
+const rij = document.getElementById("rij");
+const alarm = document.getElementById("alarm");
+const alarmLijst = document.getElementById("alarm-lijst");
+let laatsteAantal = -1;
+
+const tijd = (iso) => iso.slice(11, 19);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function teken(acties) {
+  if (chat) {
+    const berichten = acties.filter((a) => a.soort === "bericht_in" || a.soort === "bericht_uit");
+    chat.innerHTML = berichten.length
+      ? berichten.map((a) => `<div class="bel ${a.soort === "bericht_in" ? "bel-klant" : "bel-bedrijf"}">${esc(a.tekst)}<span>${tijd(a.tijd)}</span></div>`).join("")
+      : '<p class="chat-leeg">Stuur een bericht als klant.</p>';
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  const gas = acties.filter((a) => a.soort === "gasmelding").reverse();
+  alarm.hidden = gas.length === 0;
+  alarmLijst.innerHTML = gas.map((a) => `
+    <div class="alarm-item">
+      <div><strong>${tijd(a.tijd)}</strong> · klant ${esc(a.klant)}</div>
+      <div class="alarm-tekst">“${esc(a.tekst)}”</div>
+      <div>Klant heeft <strong>${esc(a.noodnummer)}</strong> en de veiligheidstekst gekregen. Bel de klant direct.</div>
+    </div>`).join("");
+
+  const gewoon = acties.filter((a) => a.soort === "gewone_rij").reverse();
+  rij.innerHTML = gewoon.length
+    ? gewoon.map((a) => `<li><strong>${tijd(a.tijd)}</strong> · ${esc(a.tekst)}</li>`).join("")
+    : '<li class="leeg">Nog geen meldingen.</li>';
+}
+
+async function ververs() {
+  try {
+    const acties = await (await fetch("/api/acties")).json();
+    if (acties.length !== laatsteAantal) {
+      laatsteAantal = acties.length;
+      teken(acties);
+    }
+  } catch (e) { /* server even weg: volgende keer opnieuw */ }
+}
+
+async function stuur(tekst) {
+  if (!tekst.trim()) return;
+  await fetch("/api/bericht", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({tekst})});
+  ververs();
+}
+
+const form = document.getElementById("invoer");
+if (form) {
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const veld = document.getElementById("tekst");
+    stuur(veld.value);
+    veld.value = "";
+  });
+  document.querySelectorAll(".snel button").forEach((b) => b.addEventListener("click", () => stuur(b.dataset.tekst)));
+}
+
+document.getElementById("reset").addEventListener("click", async () => {
+  await fetch("/api/reset", {method: "POST"});
+  ververs();
+});
+
+ververs();
+setInterval(ververs, 1000);
+</script>
+{% endblock %}

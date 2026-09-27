@@ -52,6 +52,8 @@ STORIES: list[Story] = [
             "Direct 0800-9009 en een veiligheidstekst",
             "Werkt ook als de AI niet bereikbaar is",
         ),
+        status="gesimuleerd",
+        demo_url="/demo/gas",
     ),
     Story(
         code="US-3",
