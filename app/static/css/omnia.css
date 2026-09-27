@@ -169,6 +169,15 @@ button.knop { border: 0; cursor: pointer; font-family: inherit; font-size: 1rem;
 .vb img { width: 26px; height: 20px; object-fit: cover; border-radius: 4px; margin-left: -4px; }
 .vb-alarm { border-color: #f0c4c0; background: #fdf1ef; color: #8f1e18; }
 .vb-alarm:hover { border-color: #b3261e; }
+.vb-oproep { border-color: var(--goud); background: #fdf6ea; color: var(--petrol-diep); font-weight: 500; }
+.vb-oproep:hover { border-color: var(--goud-diep); }
+.knop-oproep { background: var(--goud); color: var(--petrol-diep); }
+.knop-oproep:hover { background: #dfb46c; }
+.chat-melding { align-self: center; background: rgba(17,66,65,.08); color: var(--tekst-zacht); font-size: .8rem; padding: 4px 12px; border-radius: 999px; text-align: center; }
+.bel-sms { display: inline-block; font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; background: var(--goud); color: var(--petrol-diep); padding: 1px 6px; border-radius: 4px; margin-right: 6px; }
+.oproepen { list-style: none; padding: 0; margin: 0 0 8px; font-size: .95rem; }
+.oproepen li { padding: 6px 0; border-top: 1px solid var(--lijn); }
+.oproepen li:first-child { border-top: 0; }
 .vb-verstuurd { box-shadow: inset 0 0 0 1px var(--petrol-zacht); }
 .vb-verstuurd::after { content: "✓"; color: var(--petrol); font-weight: 600; }
 
@@ -243,7 +252,7 @@ button.knop:disabled { opacity: .6; cursor: wait; }
 .knop-alarm:hover { background: #8f1e18; }
 .start-of { color: var(--tekst-zacht); font-size: .9rem; }
 .start-of a { color: var(--petrol); }
-.stappen { list-style: none; padding: 0; margin: 0 0 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.stappen { list-style: none; padding: 0; margin: 0 0 24px; display: grid; grid-template-columns: repeat(var(--stappen, 4), minmax(0, 1fr)); gap: 12px; }
 .stap { background: #fff; border: 1px solid var(--lijn); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; color: var(--tekst-zacht); }
 .stap strong { color: var(--tekst); font-size: 1.05rem; }
 .stap span:last-child { font-size: .88rem; font-variant-numeric: tabular-nums; }
@@ -288,7 +297,7 @@ button.knop:disabled { opacity: .6; cursor: wait; }
 .aannames { margin: 0; padding-left: 1.1rem; color: var(--tekst-zacht); font-size: .9rem; }
 
 @media (max-width: 860px) {
-  .stappen { grid-template-columns: 1fr 1fr; }
+  .stappen { grid-template-columns: 1fr 1fr !important; }
   .demo-kolommen { grid-template-columns: 1fr; }
   .balk-titel { flex-basis: 100%; order: 3; padding-bottom: 8px; }
   .log th:nth-child(1), .log td:nth-child(1) { display: none; }

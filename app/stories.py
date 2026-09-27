@@ -41,6 +41,8 @@ STORIES: list[Story] = [
             "Vraagt merk, type, foutcode en foto van het typeplaatje",
             "Bedrijfsnaam aan te passen in één instelling",
         ),
+        status="gesimuleerd",
+        demo_url="/demo/telefoon",
     ),
     Story(
         code="US-2",

@@ -1,7 +1,8 @@
 """Voorbeeldberichten voor de demotelefoon, per user story.
 
 Elke knop stuurt een bericht als klant. `foto` verwijst naar een bestand in
-app/static/img/voorbeelden/ (nagemaakte foto's). Voeg hier gerust voorbeelden toe.
+app/static/img/voorbeelden/ (nagemaakte foto's). `actie` is een oproep naar het
+demonummer in plaats van een bericht. Voeg hier gerust voorbeelden toe.
 """
 
 from dataclasses import dataclass
@@ -12,6 +13,7 @@ class Voorbeeld:
     label: str
     tekst: str = ""
     foto: str | None = None
+    actie: str | None = None  # "oproep", "oproep-sms" of "oproep-onbekend"
 
 
 @dataclass(frozen=True)
@@ -23,6 +25,15 @@ class Groep:
 
 
 GROEPEN = [
+    Groep(
+        "Gemiste oproep", "US-1 · demonummer neemt niet op en stuurt een bericht",
+        (
+            Voorbeeld("📞 Bel het demonummer", actie="oproep"),
+            Voorbeeld("📞 Bel, WhatsApp werkt niet → sms", actie="oproep-sms"),
+            Voorbeeld("📞 Onbekend nummer belt", actie="oproep-onbekend"),
+        ),
+        soort="oproep",
+    ),
     Groep(
         "Gaslucht", "US-2 · gaat altijd voor, ook met tikfouten",
         (

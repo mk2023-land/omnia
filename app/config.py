@@ -41,5 +41,17 @@ WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "")
 WHATSAPP_TEST_ONTVANGER = os.getenv("WHATSAPP_TEST_ONTVANGER", "")
 WHATSAPP_API_VERSIE = os.getenv("WHATSAPP_API_VERSIE", "v23.0")
 
+# Twilio (US-1) en het publieke adres voor webhooks (ngrok)
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
+TWILIO_NUMMER = os.getenv("TWILIO_NUMMER", "")
+PUBLIEK_ADRES = os.getenv("PUBLIEK_ADRES", "").rstrip("/")
+
+# Alleen deze nummers krijgen berichten (komma-gescheiden). Standaard: het testnummer van de eigenaar.
+DEMO_NUMMER = "+31600000000"
+TESTONTVANGERS = [n.strip() for n in os.getenv("TESTONTVANGERS", "").split(",") if n.strip()] or [
+    WHATSAPP_TEST_ONTVANGER or DEMO_NUMMER
+]
+
 # Database met het actielog.
 DB_PAD = os.getenv("DB_PAD", str(ROOT / "omnia.db"))

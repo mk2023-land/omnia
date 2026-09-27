@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block titel %}OMNIA · {% if met_telefoon %}Demotelefoon{% else %}Plannerscherm{% endif %}{% endblock %}
 {% block inhoud %}
-{% set titel_balk = "Demotelefoon · US-2, 3 en 4" if met_telefoon else "Plannerscherm · " ~ bedrijfsnaam %}
+{% set titel_balk = "Demotelefoon · alle stories" if met_telefoon else "Plannerscherm · " ~ bedrijfsnaam %}
 {% set actief = "telefoon" if met_telefoon else "planner" %}
 {% include "_balk.html" %}
 
@@ -14,7 +14,7 @@
       <span>WhatsApp · gesimuleerd</span>
     </div>
     <div class="chat" id="chat">
-      <p class="chat-leeg">Stuur een bericht als klant.</p>
+      <p class="chat-leeg">Bel het demonummer of stuur een bericht als klant.</p>
     </div>
     <div class="bijlage" id="bijlage" hidden>
       <span id="bijlage-naam"></span>
@@ -40,9 +40,9 @@
       <h3>{{ groep.titel }} <small>{{ groep.uitleg }}</small></h3>
       <div class="vb-knoppen">
         {% for vb in groep.voorbeelden %}
-        <button type="button" class="vb {% if groep.soort == 'alarm' %}vb-alarm{% endif %}"
-                data-tekst="{{ vb.tekst }}"{% if vb.foto %} data-foto="{{ url_for('static', path='img/voorbeelden/' ~ vb.foto) }}"{% endif %}
-                title="{{ vb.tekst or '(alleen foto)' }}">
+        <button type="button" class="vb {% if groep.soort == 'alarm' %}vb-alarm{% elif groep.soort == 'oproep' %}vb-oproep{% endif %}"
+                data-tekst="{{ vb.tekst }}"{% if vb.actie %} data-actie="{{ vb.actie }}"{% endif %}{% if vb.foto %} data-foto="{{ url_for('static', path='img/voorbeelden/' ~ vb.foto) }}"{% endif %}
+                title="{{ vb.tekst or ('(alleen foto)' if vb.foto else vb.label) }}">
           {% if vb.foto %}<img src="{{ url_for('static', path='img/voorbeelden/' ~ vb.foto) }}" alt="">{% endif %}{{ vb.label }}
         </button>
         {% endfor %}
@@ -60,12 +60,20 @@
       <div id="alarm-lijst"></div>
     </div>
 
+    <div id="oproepen-blok" hidden>
+      <h3>Gemiste oproepen</h3>
+      <ul class="oproepen" id="oproepen"></ul>
+    </div>
+
     <h3>Gewone rij</h3>
     <div id="rij"><p class="leeg">Nog geen meldingen.</p></div>
 
     {% if met_telefoon %}
     <details class="uitleg">
       <summary>Hoe werkt het?</summary>
+      <p><strong>Gemiste oproep (US-1).</strong> Het demonummer neemt niet op. Binnen een minuut krijgt de beller een WhatsApp
+         (of een sms als WhatsApp niet lukt) met de vraag naar merk, type, foutcode en een foto van het typeplaatje.
+         Alleen nummers op de testlijst krijgen iets.</p>
       <p><strong>Gaslucht (US-2).</strong> Elk bericht gaat eerst langs een vaste woordenlijst (gas, gaslucht, ruik gas en varianten, ook met tikfouten).
          Dat gebeurt vóór de AI en zonder taalmodel, dus het werkt ook als de AI-dienst plat ligt.
          Bij een treffer krijgt de klant direct 0800-9009 en een veiligheidstekst, en komt de melding hier bovenaan.</p>
@@ -86,11 +94,17 @@ let laatste = "";
 function teken(acties) {
   const e = Omnia.esc;
   if (chat) {
-    const berichten = acties.filter((a) => a.soort === "bericht_in" || a.soort === "bericht_uit");
+    const zichtbaar = ["bericht_in", "bericht_uit", "oproep_gemist", "niet_op_lijst"];
+    const berichten = acties.filter((a) => zichtbaar.includes(a.soort));
     chat.innerHTML = berichten.length
-      ? berichten.map((a) => `<div class="bel ${a.soort === "bericht_in" ? "bel-klant" : "bel-bedrijf"}">${
-          a.foto_url ? `<img src="${e(a.foto_url)}" alt="Foto">` : ""}${e(a.tekst)}<span>${Omnia.tijd(a.tijd)}</span></div>`).join("")
-      : '<p class="chat-leeg">Stuur een bericht als klant.</p>';
+      ? berichten.map((a) => {
+          if (a.soort === "oproep_gemist") return `<div class="chat-melding">📞 Gemiste oproep naar het demonummer · ${Omnia.tijd(a.tijd)}</div>`;
+          if (a.soort === "niet_op_lijst") return `<div class="chat-melding">Nummer staat niet op de testlijst: er komt geen bericht</div>`;
+          const sms = a.kanaal === "sms" ? '<b class="bel-sms">sms</b>' : "";
+          return `<div class="bel ${a.soort === "bericht_in" ? "bel-klant" : "bel-bedrijf"}">${sms}${
+            a.foto_url ? `<img src="${e(a.foto_url)}" alt="Foto">` : ""}${e(a.tekst)}<span>${Omnia.tijd(a.tijd)}</span></div>`;
+        }).join("")
+      : '<p class="chat-leeg">Bel het demonummer of stuur een bericht als klant.</p>';
     chat.scrollTop = chat.scrollHeight;
   }
 
@@ -102,6 +116,21 @@ function teken(acties) {
       <div class="alarm-tekst">“${e(a.tekst)}”</div>
       <div>Klant heeft <strong>${e(a.noodnummer)}</strong> en de veiligheidstekst gekregen. Bel de klant direct.</div>
     </div>`).join("");
+
+  const oproepen = acties.filter((a) => a.soort === "oproep_gemist").reverse();
+  document.getElementById("oproepen-blok").hidden = oproepen.length === 0;
+  document.getElementById("oproepen").innerHTML = oproepen.map((o) => {
+    const na = acties.filter((a) => a.id > o.id);
+    const volgende = na.find((a) => a.soort === "oproep_gemist");
+    const erbij = na.filter((a) => !volgende || a.id < volgende.id);
+    const uit = erbij.find((a) => a.soort === "bericht_uit");
+    const weg = erbij.find((a) => a.soort === "niet_op_lijst");
+    const sec = (a, b) => ((new Date(b.tijd) - new Date(a.tijd)) / 1000).toLocaleString("nl-NL", {maximumFractionDigits: 1});
+    const status = weg ? "niet op testlijst, niets verstuurd"
+      : uit ? `${uit.kanaal === "sms" ? "sms" : "WhatsApp"} verstuurd na ${sec(o, uit)} s`
+      : "bericht wordt verstuurd…";
+    return `<li><strong>${Omnia.tijd(o.tijd)}</strong> · ${e(o.nummer)} · ${status}</li>`;
+  }).join("");
 
   const meldingen = Omnia.meldingen(acties).reverse();
   document.getElementById("rij").innerHTML = meldingen.length
@@ -150,6 +179,15 @@ if (form) {
     veld.value = "";
   });
   document.querySelectorAll(".vb").forEach((b) => b.addEventListener("click", async () => {
+    if (b.dataset.actie) {
+      b.classList.add("vb-verstuurd");
+      const data = new FormData();
+      data.append("whatsapp_werkt", b.dataset.actie !== "oproep-sms");
+      data.append("onbekend", b.dataset.actie === "oproep-onbekend");
+      await fetch("/api/oproep", {method: "POST", body: data});
+      ververs();
+      return;
+    }
     let foto = null;
     if (b.dataset.foto) {
       const blob = await (await fetch(b.dataset.foto)).blob();

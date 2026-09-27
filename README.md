@@ -46,4 +46,4 @@ Staat die op `true`, dan wordt de dienst nagebootst en werkt de demo zonder acco
 3. US-5 Demoscherm met logboek en rekensom ✅ (`/demo`)
 4. US-3 Storing uitlezen uit foto en tekst ✅ (`/demo/telefoon`, test op eigen foto's: `scripts/test_fotos.py`)
 5. US-4 Planningsvoorstel in een demo-agenda ✅ (lokale agenda op `/agenda`; Google Agenda volgt)
-6. US-1 Demonummer belt terug
+6. US-1 Demonummer belt terug ✅ gesimuleerd (knop op `/demo/telefoon`); echt via Twilio-webhook `/twilio/voice` zodra account en ngrok klaar zijn

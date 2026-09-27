@@ -5,7 +5,7 @@ in de browser. Met SIMULATIE_WHATSAPP=false gaat het ook echt via WhatsApp.
 """
 
 from app import config
-from app.core import whatsapp
+from app.core import sms, whatsapp
 from app.core.logboek import Logboek
 
 # De klant op de demopagina heet "demo"; in het echt is dat het testnummer.
@@ -30,3 +30,14 @@ def verstuur(logboek: Logboek, naar: str, tekst: str, kanaal: str = "whatsapp") 
     return logboek.schrijf(
         naar, "bericht_uit", tekst=tekst, kanaal=kanaal, gesimuleerd=False, verzonden=True, bericht_id=bericht_id
     )
+
+
+def verstuur_sms(logboek: Logboek, klant: str, nummer: str, tekst: str) -> dict:
+    if config.SIMULATIE_TELEFONIE:
+        return logboek.schrijf(klant, "bericht_uit", tekst=tekst, kanaal="sms", gesimuleerd=True)
+    try:
+        sid = sms.stuur(nummer, tekst)
+    except (sms.SmsFout, OSError) as fout:
+        logboek.schrijf(klant, "verzendfout", kanaal="sms", fout=str(fout))
+        return logboek.schrijf(klant, "bericht_uit", tekst=tekst, kanaal="sms", gesimuleerd=False, verzonden=False)
+    return logboek.schrijf(klant, "bericht_uit", tekst=tekst, kanaal="sms", gesimuleerd=False, verzonden=True, bericht_id=sid)

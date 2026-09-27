@@ -12,8 +12,9 @@
       <span class="sub" id="run-duur">Wacht op een bericht van de klant…</span>
     </div>
     <div class="start" id="start">
-      <p><strong>Start een run</strong>: stuur als klant een bericht. Kies een voorbeeld of typ zelf iets.</p>
+      <p><strong>Start een run</strong>: bel het demonummer, of stuur als klant meteen een bericht.</p>
       <div class="start-knoppen">
+        <button type="button" class="knop knop-oproep" id="start-oproep">📞 Bel het demonummer</button>
         <button type="button" class="knop" data-tekst="Remeha ketel geeft F28, geen warm water">Ketel geeft F28</button>
         <button type="button" class="knop knop-alarm" data-tekst="ik ruik gas in de keuken">Ik ruik gas</button>
         <label class="knop knop-licht knop-rand">Foto van ketel sturen…<input type="file" id="start-foto" accept="image/*" hidden></label>
@@ -98,6 +99,8 @@ const LABELS = {
   voorstel: "Planningsvoorstel",
   goedkeuring: "Goedgekeurd",
   verzendfout: "Verzenden mislukt",
+  oproep_gemist: "Gemiste oproep",
+  niet_op_lijst: "Niet op testlijst",
   andere_tijd: "Andere tijd gevraagd",
   zelf_bellen: "Planner belt zelf",
   geen_voorstel: "Geen vrij blok",
@@ -105,6 +108,8 @@ const LABELS = {
 
 function details(a) {
   switch (a.soort) {
+    case "oproep_gemist": return `Demonummer gebeld door ${esc(a.nummer)}, niet opgenomen`;
+    case "niet_op_lijst": return esc(a.reden);
     case "bericht_in": return `${a.foto_url ? `<a href="${esc(a.foto_url)}" target="_blank" rel="noopener">📷 foto</a> ` : ""}${a.tekst ? `“${esc(a.tekst)}”` : ""}`;
     case "bericht_uit": return `${esc(a.kanaal)}${a.gesimuleerd ? " (gesimuleerd)" : a.verzonden ? " (verstuurd)" : " (niet verstuurd)"}: ${esc(a.tekst).slice(0, 90)}…`;
     case "gasmelding": return `Noodnummer ${esc(a.noodnummer)} gestuurd · herkend: ${esc((a.woorden || []).join(" + "))}`;
@@ -124,12 +129,18 @@ function tekenStappen(acties) {
   const start = acties.length ? new Date(acties[0].tijd) : null;
   const eerste = (...soorten) => acties.find((a) => soorten.includes(a.soort));
   const gas = eerste("gasmelding");
+  const oproep = eerste("oproep_gemist");
   const stappen = [
-    {naam: "Bericht", actie: eerste("bericht_in")},
+    ...(oproep ? [
+      {naam: "Gemiste oproep", actie: oproep},
+      {naam: "Bericht naar klant", actie: acties.find((a) => a.soort === "bericht_uit" && a.id > oproep.id)},
+    ] : []),
+    {naam: oproep ? "Antwoord klant" : "Bericht", actie: eerste("bericht_in")},
     {naam: gas ? "Gasmelding" : "AI-uitvoer", actie: gas || eerste("ai_uitvoer", "ai_fout"), alarm: !!gas},
     {naam: "Voorstel", actie: eerste("voorstel"), nvt: !!gas},
     {naam: eerste("zelf_bellen") && !eerste("goedkeuring") ? "Zelf bellen" : "Goedkeuring", actie: eerste("goedkeuring", "zelf_bellen"), nvt: !!gas},
   ];
+  document.getElementById("stappen").style.setProperty("--stappen", stappen.length);
   document.getElementById("stappen").innerHTML = stappen.map((s, i) => {
     const klasse = s.alarm ? "stap-alarm" : s.actie ? "stap-klaar" : s.nvt ? "stap-nvt" : "";
     const onder = s.actie ? `${tijd(s.actie.tijd).slice(0, 8)} · +${sec(new Date(s.actie.tijd) - start)}`
@@ -190,7 +201,11 @@ document.getElementById("simuleer").addEventListener("submit", (e) => {
   stuur(veld.value);
   veld.value = "";
 });
-document.querySelectorAll(".start-knoppen button").forEach((b) => b.addEventListener("click", () => stuur(b.dataset.tekst)));
+document.querySelectorAll(".start-knoppen button[data-tekst]").forEach((b) => b.addEventListener("click", () => stuur(b.dataset.tekst)));
+document.getElementById("start-oproep").addEventListener("click", async () => {
+  await fetch("/api/oproep", {method: "POST", body: new FormData()});
+  ververs();
+});
 
 // ---------- Rekensom ----------
 

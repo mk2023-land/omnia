@@ -7,11 +7,11 @@ from datetime import date
 from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app import config
-from app.core import fotos, planning, rekensom
+from app.core import fotos, planning, rekensom, sms, terugbellen
 from app.core.agenda import BLOKKEN, MONTEURS, Agenda, werkdagen
 from app.core.logboek import Logboek
 from app.core.uitlezen import lees_uit
@@ -147,6 +147,26 @@ def api_rekensom(
         return rekensom.bereken(oproepen_per_week, deel_gemist_pct, waarde_klus, deel_klus_pct)
     except ValueError as fout:
         raise HTTPException(422, str(fout)) from fout
+
+
+@app.post("/api/oproep")
+def oproep_demo(request: Request, whatsapp_werkt: bool = Form(True), onbekend: bool = Form(False)):
+    """Demoknop: het demonummer wordt gebeld en neemt niet op."""
+    nummer = "+31612345678" if onbekend else config.TESTONTVANGERS[0]
+    return terugbellen.gemiste_oproep(logboek(request), "demo", nummer, whatsapp_werkt=whatsapp_werkt)
+
+
+@app.post("/twilio/voice")
+async def twilio_voice(request: Request, achtergrond: BackgroundTasks):
+    """Webhook van Twilio: iemand belt het demonummer. We nemen niet op en sturen een bericht."""
+    velden = {k: str(v) for k, v in (await request.form()).items()}
+    url = f"{config.PUBLIEK_ADRES}/twilio/voice"
+    if not sms.handtekening_klopt(url, velden, request.headers.get("X-Twilio-Signature", "")):
+        raise HTTPException(403, "Ongeldige Twilio-handtekening.")
+    nummer = velden.get("From", "")
+    achtergrond.add_task(terugbellen.gemiste_oproep, logboek(request), nummer, nummer)
+    twiml = '<?xml version="1.0" encoding="UTF-8"?><Response><Reject reason="busy"/></Response>'
+    return Response(twiml, media_type="application/xml")
 
 
 @app.post("/api/voorstel/{voorstel_id}/{keuze}")
