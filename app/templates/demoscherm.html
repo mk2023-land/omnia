@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block titel %}OMNIA · Demoscherm{% endblock %}
+{% block inhoud %}
+{% set titel_balk = "US-5 · Demoscherm" %}
+{% set actief = "demo" %}
+{% include "_balk.html" %}
+
+<main class="wrap demoscherm">
+  <section aria-labelledby="run-kop">
+    <div class="sectie-kop">
+      <h2 id="run-kop">De run</h2>
+      <span class="sub" id="run-duur">Wacht op een bericht van de klant…</span>
+    </div>
+    <ol class="stappen" id="stappen"></ol>
+  </section>
+
+  <div class="demo-kolommen">
+    <section class="paneel" aria-labelledby="log-kop">
+      <h2 id="log-kop">Logboek</h2>
+      <table class="log">
+        <thead><tr><th>Tijd</th><th>Na start</th><th>Stap</th><th>Details</th></tr></thead>
+        <tbody id="log"><tr><td colspan="4" class="leeg">Nog niets gebeurd.</td></tr></tbody>
+      </table>
+      <details class="simuleer">
+        <summary>Klantbericht simuleren</summary>
+        <form id="simuleer" class="invoer">
+          <input id="sim-tekst" autocomplete="off" placeholder="bijv. ketel geeft F28" aria-label="Bericht van klant">
+          <button class="knop" type="submit">Stuur</button>
+        </form>
+      </details>
+    </section>
+
+    <section class="paneel" aria-labelledby="som-kop">
+      <div class="sectie-kop">
+        <h2 id="som-kop">Wat kost een gemist telefoontje?</h2>
+        <span class="badge badge-voorbeeld" id="voorbeeld-badge">Voorbeeldcijfers</span>
+      </div>
+      <form id="som" class="som-velden">
+        <label>Oproepen per week
+          <input type="number" name="oproepen_per_week" min="0" step="1" inputmode="numeric">
+        </label>
+        <label>Deel gemist (%)
+          <input type="number" name="deel_gemist_pct" min="0" max="100" step="1" inputmode="numeric">
+        </label>
+        <label>Waarde van een klus (€)
+          <input type="number" name="waarde_klus" min="0" step="10" inputmode="numeric">
+        </label>
+        <label>Gemiste bellers die een klus waren geworden (%)
+          <input type="number" name="deel_klus_pct" min="0" max="100" step="5" inputmode="numeric">
+        </label>
+      </form>
+      <div class="som-uitkomst" aria-live="polite">
+        <div class="som-groot"><span id="omzet-maand">–</span><small>gemiste omzet per maand</small></div>
+        <ul class="som-regels">
+          <li><span id="gemist-maand">–</span> gemiste oproepen per maand</li>
+          <li><span id="klussen-maand">–</span> klussen die naar een ander gaan</li>
+          <li><span id="omzet-jaar">–</span> per jaar</li>
+        </ul>
+        <p class="som-fout" id="som-fout" hidden></p>
+      </div>
+      <h3>Aannames</h3>
+      <ul class="aannames" id="aannames"></ul>
+    </section>
+  </div>
+</main>
+
+<script>
+const VOORBEELD = {{ voorbeeld | tojson }};
+const euro = new Intl.NumberFormat("nl-NL", {style: "currency", currency: "EUR", maximumFractionDigits: 0});
+const getal = new Intl.NumberFormat("nl-NL", {maximumFractionDigits: 1});
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const tijd = (iso) => iso.slice(11, 23);
+const sec = (ms) => (ms / 1000).toLocaleString("nl-NL", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " s";
+
+// ---------- Logboek en stappen ----------
+
+const LABELS = {
+  bericht_in: "Bericht van klant",
+  bericht_uit: "Bericht naar klant",
+  gasmelding: "Gasmelding",
+  gewone_rij: "In de gewone rij",
+  ai_uitvoer: "AI-uitvoer",
+  ai_fout: "AI niet bereikbaar",
+  voorstel: "Planningsvoorstel",
+  goedkeuring: "Goedgekeurd",
+  verzendfout: "Verzenden mislukt",
+};
+
+function details(a) {
+  switch (a.soort) {
+    case "bericht_in": return `“${esc(a.tekst)}”`;
+    case "bericht_uit": return `${esc(a.kanaal)}${a.gesimuleerd ? " (gesimuleerd)" : a.verzonden ? " (verstuurd)" : " (niet verstuurd)"}: ${esc(a.tekst).slice(0, 90)}…`;
+    case "gasmelding": return `Noodnummer ${esc(a.noodnummer)} gestuurd · herkend: ${esc((a.woorden || []).join(" + "))}`;
+    case "ai_fout": case "verzendfout": return esc(a.fout);
+    case "ai_uitvoer": return esc(["merk", "type", "foutcode", "klacht"].map((k) => a[k] ? `${k}: ${a[k]}` : null).filter(Boolean).join(" · "));
+    default: return esc(a.tekst || "");
+  }
+}
+
+function tekenStappen(acties) {
+  const start = acties.length ? new Date(acties[0].tijd) : null;
+  const eerste = (...soorten) => acties.find((a) => soorten.includes(a.soort));
+  const gas = eerste("gasmelding");
+  const stappen = [
+    {naam: "Bericht", actie: eerste("bericht_in")},
+    {naam: gas ? "Gasmelding" : "AI-uitvoer", actie: gas || eerste("ai_uitvoer", "ai_fout"), alarm: !!gas},
+    {naam: "Voorstel", actie: eerste("voorstel"), nvt: !!gas},
+    {naam: "Goedkeuring", actie: eerste("goedkeuring"), nvt: !!gas},
+  ];
+  document.getElementById("stappen").innerHTML = stappen.map((s, i) => {
+    const klasse = s.alarm ? "stap-alarm" : s.actie ? "stap-klaar" : s.nvt ? "stap-nvt" : "";
+    const onder = s.actie ? `${tijd(s.actie.tijd).slice(0, 8)} · +${sec(new Date(s.actie.tijd) - start)}`
+                : s.nvt ? "n.v.t.: direct naar planner" : "wacht…";
+    return `<li class="stap ${klasse}"><span class="stap-nr">${i + 1}</span><strong>${s.naam}</strong><span>${onder}</span></li>`;
+  }).join("");
+
+  const duur = document.getElementById("run-duur");
+  if (!start) duur.textContent = "Wacht op een bericht van de klant…";
+  else duur.textContent = `Gestart ${tijd(acties[0].tijd).slice(0, 8)} · laatste stap na ${sec(new Date(acties.at(-1).tijd) - start)}`;
+}
+
+function tekenLog(acties) {
+  const tbody = document.getElementById("log");
+  if (!acties.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="leeg">Nog niets gebeurd.</td></tr>';
+    return;
+  }
+  const start = new Date(acties[0].tijd);
+  tbody.innerHTML = acties.map((a) => `
+    <tr class="log-${a.soort}">
+      <td>${tijd(a.tijd)}</td>
+      <td>+${sec(new Date(a.tijd) - start)}</td>
+      <td>${LABELS[a.soort] || esc(a.soort)}</td>
+      <td>${details(a)}</td>
+    </tr>`).join("");
+}
+
+let laatsteAantal = -1;
+async function ververs() {
+  try {
+    const acties = await (await fetch("/api/acties")).json();
+    if (acties.length === laatsteAantal) return;
+    laatsteAantal = acties.length;
+    tekenStappen(acties);
+    tekenLog(acties);
+  } catch (e) { /* server even weg */ }
+}
+
+document.getElementById("simuleer").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const veld = document.getElementById("sim-tekst");
+  if (!veld.value.trim()) return;
+  await fetch("/api/bericht", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({tekst: veld.value})});
+  veld.value = "";
+  ververs();
+});
+
+// ---------- Rekensom ----------
+
+const som = document.getElementById("som");
+
+function vulVoorbeeld() {
+  for (const [naam, waarde] of Object.entries(VOORBEELD)) som.elements[naam].value = waarde;
+}
+
+async function reken() {
+  const waarden = Object.fromEntries(new FormData(som));
+  const isVoorbeeld = Object.entries(VOORBEELD).every(([k, v]) => Number(waarden[k]) === v);
+  document.getElementById("voorbeeld-badge").hidden = !isVoorbeeld;
+
+  const fout = document.getElementById("som-fout");
+  if (Object.values(waarden).some((v) => v === "")) return;
+  const r = await fetch("/api/rekensom?" + new URLSearchParams(waarden));
+  if (!r.ok) {
+    fout.textContent = "Controleer de cijfers: percentages tussen 0 en 100, niets negatief.";
+    fout.hidden = false;
+    return;
+  }
+  fout.hidden = true;
+  const u = await r.json();
+  document.getElementById("omzet-maand").textContent = euro.format(u.omzet_per_maand);
+  document.getElementById("omzet-jaar").textContent = euro.format(u.omzet_per_jaar);
+  document.getElementById("gemist-maand").textContent = getal.format(u.gemist_per_maand);
+  document.getElementById("klussen-maand").textContent = getal.format(u.klussen_per_maand);
+  document.getElementById("aannames").innerHTML = u.aannames.map((a) => `<li>${esc(a)}</li>`).join("");
+}
+
+som.addEventListener("input", reken);
+
+// ---------- Reset ----------
+
+document.getElementById("reset").addEventListener("click", async () => {
+  await fetch("/api/reset", {method: "POST"});
+  vulVoorbeeld();
+  reken();
+  ververs();
+});
+
+vulVoorbeeld();
+reken();
+ververs();
+setInterval(ververs, 1000);
+</script>
+{% endblock %}

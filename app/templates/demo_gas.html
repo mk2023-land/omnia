@@ -1,13 +1,9 @@
 {% extends "base.html" %}
 {% block titel %}OMNIA · {% if met_telefoon %}Gaslucht gaat altijd voor{% else %}Plannerscherm{% endif %}{% endblock %}
 {% block inhoud %}
-<header class="balk">
-  <div class="wrap balk-inhoud">
-    <a href="/" class="balk-logo"><img src="{{ url_for('static', path='img/omnia-mark.webp') }}" alt=""> OMNIA</a>
-    <span class="balk-titel">{% if met_telefoon %}US-2 · Gaslucht gaat altijd voor{% else %}Plannerscherm · {{ bedrijfsnaam }}{% endif %}</span>
-    <button class="knop knop-klein knop-licht" id="reset" type="button">Reset</button>
-  </div>
-</header>
+{% set titel_balk = "US-2 · Gaslucht gaat altijd voor" if met_telefoon else "Plannerscherm · " ~ bedrijfsnaam %}
+{% set actief = "gas" if met_telefoon else "planner" %}
+{% include "_balk.html" %}
 
 <main class="wrap demo {% if met_telefoon %}demo-twee{% endif %}">
   {% if met_telefoon %}

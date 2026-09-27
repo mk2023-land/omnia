@@ -97,6 +97,10 @@ code { background: rgba(0,0,0,.06); padding: 1px 6px; border-radius: 6px; font-s
 .balk-logo { display: flex; align-items: center; gap: 8px; color: var(--creme); text-decoration: none; font-weight: 600; letter-spacing: .18em; }
 .balk-logo img { height: 28px; width: auto; }
 .balk-titel { color: var(--goud); flex: 1; }
+.balk-nav { display: flex; gap: 4px; }
+.balk-nav a { color: var(--creme); text-decoration: none; padding: 6px 10px; border-radius: 8px; font-size: .95rem; }
+.balk-nav a:hover { background: rgba(255,255,255,.08); }
+.balk-nav a[aria-current="page"] { background: rgba(233,195,132,.18); color: var(--goud); }
 .knop-klein { align-self: center; padding: 6px 14px; font-size: .9rem; border: 0; cursor: pointer; font-family: inherit; }
 .knop-licht { background: var(--creme); color: var(--petrol); margin-top: 0; }
 .knop-licht:hover { background: #fff; }
@@ -137,7 +141,60 @@ button.knop { border: 0; cursor: pointer; font-family: inherit; font-size: 1rem;
 .uitleg { margin-top: 24px; color: var(--tekst-zacht); }
 .uitleg summary { cursor: pointer; color: var(--petrol); font-weight: 500; }
 
+/* ---------- Demoscherm (US-5) ---------- */
+.demoscherm { padding-top: 24px; padding-bottom: 32px; }
+.demoscherm h2 { margin: 0; font-size: 1.35rem; }
+.sectie-kop { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.sectie-kop .sub { margin: 0; }
+
+.stappen { list-style: none; padding: 0; margin: 0 0 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.stap { background: #fff; border: 1px solid var(--lijn); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; color: var(--tekst-zacht); }
+.stap strong { color: var(--tekst); font-size: 1.05rem; }
+.stap span:last-child { font-size: .88rem; font-variant-numeric: tabular-nums; }
+.stap-nr { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #eeeae2; color: var(--tekst-zacht); font-weight: 600; font-size: .85rem; margin-bottom: 6px; }
+.stap-klaar { border-color: var(--petrol-zacht); }
+.stap-klaar .stap-nr { background: var(--petrol); color: var(--creme); }
+.stap-alarm { border: 2px solid #b3261e; background: #fdecea; }
+.stap-alarm .stap-nr { background: #b3261e; color: #fff; }
+.stap-nvt { opacity: .6; }
+
+.demo-kolommen { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: start; }
+.paneel { background: #fff; border: 1px solid var(--lijn); border-radius: var(--radius); padding: 20px; min-width: 0; }
+.paneel > h2 { margin-bottom: 12px; }
+.paneel h3 { font-size: 1rem; margin: 20px 0 6px; }
+
+.log { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.log th { white-space: nowrap; text-align: left; font-weight: 500; color: var(--tekst-zacht); border-bottom: 1px solid var(--lijn); padding: 6px 8px 6px 0; }
+.log td { padding: 8px 8px 8px 0; border-bottom: 1px solid #f0ebe2; vertical-align: top; }
+.log td:nth-child(1), .log td:nth-child(2) { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--tekst-zacht); }
+.log td:nth-child(3) { white-space: nowrap; font-weight: 500; }
+.log td:nth-child(4) { overflow-wrap: anywhere; }
+.log .leeg { color: var(--tekst-zacht); }
+.log-gasmelding td { background: #fdecea; }
+.log-gasmelding td:nth-child(3), .log-ai_fout td:nth-child(3), .log-verzendfout td:nth-child(3) { color: #b3261e; }
+.simuleer { margin-top: 16px; }
+.simuleer summary { cursor: pointer; color: var(--petrol); font-weight: 500; }
+.simuleer .invoer { padding: 10px 0 0; }
+
+.badge-voorbeeld { background: #fbecd0; color: #7a5a1e; }
+.som-velden { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.som-velden label { display: flex; flex-direction: column; gap: 4px; font-size: .88rem; color: var(--tekst-zacht); }
+.som-velden input { font: inherit; font-size: 1.05rem; color: var(--tekst); padding: 8px 10px; border: 1px solid var(--lijn); border-radius: 10px; width: 100%; }
+.som-velden input:focus { outline: 2px solid var(--goud); border-color: var(--goud); }
+.som-uitkomst { margin-top: 18px; padding: 16px; border-radius: var(--radius); background: var(--petrol); color: var(--creme); }
+.som-groot { display: flex; flex-direction: column; }
+.som-groot span { font-size: 2.2rem; font-weight: 600; color: var(--goud); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.som-groot small { font-size: .95rem; }
+.som-regels { list-style: none; padding: 0; margin: 12px 0 0; font-size: .92rem; color: #e6e0d4; }
+.som-regels span { font-weight: 600; color: var(--creme); font-variant-numeric: tabular-nums; }
+.som-fout { margin: 10px 0 0; color: #ffd6d2; }
+.aannames { margin: 0; padding-left: 1.1rem; color: var(--tekst-zacht); font-size: .9rem; }
+
 @media (max-width: 860px) {
+  .stappen { grid-template-columns: 1fr 1fr; }
+  .demo-kolommen { grid-template-columns: 1fr; }
+  .balk-titel { flex-basis: 100%; order: 3; padding-bottom: 8px; }
+  .log th:nth-child(1), .log td:nth-child(1) { display: none; }
   .demo-twee { grid-template-columns: 1fr; }
   .telefoon { height: 560px; }
 }

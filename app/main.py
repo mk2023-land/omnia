@@ -5,13 +5,14 @@ Starten:  .venv\\Scripts\\python -m uvicorn app.main:app --reload
 
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from app import config
+from app.core import rekensom
 from app.core.logboek import Logboek
 from app.core.werkstroom import verwerk_bericht
 from app.stories import BOUWVOLGORDE, STORIES
@@ -45,6 +46,13 @@ def landingspagina(request: Request):
     )
 
 
+@app.get("/demo", response_class=HTMLResponse)
+def demoscherm(request: Request):
+    return templates.TemplateResponse(
+        request, "demoscherm.html", {"bedrijfsnaam": config.BEDRIJFSNAAM, "voorbeeld": rekensom.VOORBEELD}
+    )
+
+
 @app.get("/demo/gas", response_class=HTMLResponse)
 def demo_gas(request: Request):
     return templates.TemplateResponse(
@@ -74,6 +82,19 @@ def bericht_in(bericht: Bericht, request: Request):
 @app.get("/api/acties")
 def acties(request: Request, na_id: int = 0):
     return logboek(request).lees(na_id=na_id)
+
+
+@app.get("/api/rekensom")
+def api_rekensom(
+    oproepen_per_week: float = Query(ge=0),
+    deel_gemist_pct: float = Query(ge=0, le=100),
+    waarde_klus: float = Query(ge=0),
+    deel_klus_pct: float = Query(rekensom.VOORBEELD["deel_klus_pct"], ge=0, le=100),
+):
+    try:
+        return rekensom.bereken(oproepen_per_week, deel_gemist_pct, waarde_klus, deel_klus_pct)
+    except ValueError as fout:
+        raise HTTPException(422, str(fout)) from fout
 
 
 @app.post("/api/reset")

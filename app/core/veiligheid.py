@@ -96,17 +96,11 @@ def controleer_gaslucht(tekst: str) -> Treffer | None:
         if _lijkt_op(w, GASWOORDEN):
             return Treffer("gaswoord", (w,))
 
-    # 2. Aan elkaar geschreven zonder spaties: "ikruikgas".
-    aaneen = "".join(woorden)
-    for w in GASWOORDEN:
-        if w in aaneen:
-            return Treffer("gaswoord", (w,))
-
-    # 3. Een bericht dat alleen uit "gas" bestaat, of bijna: "gas!!", "help gas".
+    # 2. Een bericht dat alleen uit "gas" bestaat, of bijna: "gas!!", "help gas".
     if len(woorden) <= 2 and any(_is_gas(w) for w in woorden):
         return Treffer("alleen gas", tuple(woorden))
 
-    # 4. Gas (of gasketel, gasfornuis...) met een signaalwoord in de buurt.
+    # 3. Gas (of gasketel, gasfornuis...) met een signaalwoord in de buurt.
     for i, w in enumerate(woorden):
         if not (_is_gas(w) or _is_gas_samenstelling(w)):
             continue
@@ -114,6 +108,12 @@ def controleer_gaslucht(tekst: str) -> Treffer | None:
         for b in buren:
             if b != w and _lijkt_op(b, SIGNAALWOORDEN):
                 return Treffer("gas + signaalwoord", (w, b))
+
+    # 4. Aan elkaar geschreven zonder spaties: "ikruikgas".
+    aaneen = "".join(woorden)
+    for w in GASWOORDEN:
+        if w in aaneen:
+            return Treffer("gaswoord", (w,))
 
     return None
 

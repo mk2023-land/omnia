@@ -87,6 +87,8 @@ STORIES: list[Story] = [
             "Eigen cijfers invullen, aannames erbij",
             "Resetknop na elke run",
         ),
+        status="gesimuleerd",
+        demo_url="/demo",
     ),
 ]
 

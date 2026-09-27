@@ -93,3 +93,12 @@ def test_echte_verzending_gebruikt_testnummer_voor_demoklant(logboek, monkeypatc
     monkeypatch.setattr(whatsapp, "stuur_tekst", lambda naar, tekst: verstuurd.append(naar) or "wamid.test")
     verwerk_bericht(logboek, "demo", "ik ruik gas")
     assert verstuurd == ["+31600000000"]
+
+
+def test_demoscherm_en_rekensom_api():
+    client = TestClient(app)
+    assert client.get("/demo").status_code == 200
+    r = client.get("/api/rekensom", params={"oproepen_per_week": 60, "deel_gemist_pct": 25, "waarde_klus": 250})
+    assert r.status_code == 200 and r.json()["omzet_per_maand"] > 0
+    fout = client.get("/api/rekensom", params={"oproepen_per_week": 60, "deel_gemist_pct": 150, "waarde_klus": 250})
+    assert fout.status_code == 422

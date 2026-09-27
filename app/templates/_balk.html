@@ -1,0 +1,12 @@
+<header class="balk">
+  <div class="wrap balk-inhoud">
+    <a href="/" class="balk-logo"><img src="{{ url_for('static', path='img/omnia-mark.webp') }}" alt=""> OMNIA</a>
+    <span class="balk-titel">{{ titel_balk }}</span>
+    <nav class="balk-nav" aria-label="Demo's">
+      <a href="/demo" {% if actief == "demo" %}aria-current="page"{% endif %}>Demoscherm</a>
+      <a href="/demo/gas" {% if actief == "gas" %}aria-current="page"{% endif %}>Gas</a>
+      <a href="/planner" {% if actief == "planner" %}aria-current="page"{% endif %}>Planner</a>
+    </nav>
+    <button class="knop knop-klein knop-licht" id="reset" type="button">Reset</button>
+  </div>
+</header>
