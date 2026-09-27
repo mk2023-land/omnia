@@ -1,0 +1,92 @@
+/* OMNIA-huisstijl. Kleuren komen uit het logo. */
+:root {
+  --petrol: #114241;
+  --petrol-diep: #0b2e2d;
+  --petrol-zacht: #52726b;
+  --creme: #f5efe5;
+  --creme-licht: #fbf8f3;
+  --goud: #e9c384;
+  --goud-diep: #b88a3e;
+  --tekst: #16302f;
+  --tekst-zacht: #4e6664;
+  --lijn: #e3dccf;
+  --radius: 14px;
+  --font: "Jost", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--creme-licht);
+  color: var(--tekst);
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+
+h1, h2, h3 { line-height: 1.2; font-weight: 600; }
+h2 { font-size: 1.6rem; margin: 3rem 0 .25rem; }
+.sub { color: var(--tekst-zacht); margin: 0 0 1.25rem; }
+code { background: rgba(0,0,0,.06); padding: 1px 6px; border-radius: 6px; font-size: .9em; }
+
+/* Hero */
+.hero { background: var(--petrol); color: var(--creme); padding: 48px 0 56px; }
+.hero-grid { display: grid; grid-template-columns: 260px 1fr; gap: 48px; align-items: center; }
+.hero-logo { width: 100%; height: auto; display: block; }
+.kicker { color: var(--goud); text-transform: uppercase; letter-spacing: .14em; font-size: .8rem; margin: 0 0 .5rem; }
+.hero h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0 0 1rem; }
+.lead { font-size: 1.1rem; max-width: 60ch; margin: 0 0 1.25rem; color: #e6e0d4; }
+.voortgang { display: inline-block; margin: 0; padding: 6px 14px; border: 1px solid var(--goud); border-radius: 999px; color: var(--goud); }
+.voortgang strong { color: var(--creme); }
+
+/* Keten */
+.keten { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; counter-reset: stap; }
+.keten-stap { position: relative; background: #fff; border: 1px solid var(--lijn); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 2px; }
+.keten-stap:not(:last-child)::after { content: ""; position: absolute; right: -6px; top: 50%; width: 8px; height: 8px; border-top: 2px solid var(--goud-diep); border-right: 2px solid var(--goud-diep); transform: translate(50%, -50%) rotate(45deg); }
+.keten-nr { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--petrol); color: var(--creme); font-weight: 600; font-size: .9rem; margin-bottom: 6px; }
+.keten-naam { font-weight: 600; }
+.keten-code { color: var(--tekst-zacht); font-size: .85rem; }
+
+/* Kaarten */
+.kaarten { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.kaart { background: #fff; border: 1px solid var(--lijn); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; }
+.kaart h3 { font-size: 1.2rem; margin: .6rem 0 .3rem; }
+.kaart p { margin: 0 0 .6rem; color: var(--tekst-zacht); }
+.kaart ul { margin: 0 0 1.2rem; padding-left: 1.1rem; }
+.kaart li { margin: 2px 0; }
+.kaart-kop { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.code { font-weight: 600; color: var(--petrol); letter-spacing: .04em; }
+
+.badge { font-size: .78rem; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.badge.status-gepland { background: #eeeae2; color: var(--tekst-zacht); }
+.badge.status-bezig { background: #fbecd0; color: #7a5a1e; }
+.badge.status-gesimuleerd { background: #dcebe6; color: var(--petrol); }
+.badge.status-live { background: var(--petrol); color: var(--creme); }
+.keten-stap.status-gesimuleerd, .keten-stap.status-live { border-color: var(--petrol-zacht); }
+.keten-stap.status-live .keten-nr { background: var(--goud); color: var(--petrol); }
+
+.knop { margin-top: auto; align-self: flex-start; display: inline-block; padding: 10px 18px; border-radius: 10px; background: var(--petrol); color: var(--creme); text-decoration: none; font-weight: 500; }
+.knop:hover { background: var(--petrol-diep); }
+.knop-uit { background: #eeeae2; color: var(--tekst-zacht); cursor: default; }
+.knop-uit:hover { background: #eeeae2; }
+
+/* Bouwvolgorde */
+.volgorde ol { margin: 0; padding-left: 1.4rem; }
+.volgorde li { margin: 8px 0; }
+.volgorde .badge { margin-left: 6px; }
+
+.voet { margin-top: 64px; padding: 24px 0; border-top: 1px solid var(--lijn); color: var(--tekst-zacht); font-size: .9rem; }
+
+@media (max-width: 860px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 24px; }
+  .hero-logo { max-width: 200px; }
+  .keten { grid-template-columns: 1fr; }
+  .keten-stap { flex-direction: row; align-items: center; gap: 12px; }
+  .keten-nr { margin: 0; }
+  .keten-code { margin-left: auto; }
+  .keten-stap:not(:last-child)::after { right: 50%; top: auto; bottom: -6px; transform: translate(50%, 50%) rotate(135deg); }
+  .kaarten { grid-template-columns: 1fr; }
+}

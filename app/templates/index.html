@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block titel %}OMNIA · Demo-overzicht{% endblock %}
+{% block inhoud %}
+<header class="hero">
+  <div class="wrap hero-grid">
+    <img class="hero-logo" src="{{ url_for('static', path='img/omnia-logo.webp') }}" alt="OMNIA">
+    <div>
+      <p class="kicker">Intern demo-overzicht</p>
+      <h1>Minder bellen, meer sleutelen.</h1>
+      <p class="lead">
+        OMNIA neemt het werk over tussen een gemist telefoontje en een ingeplande monteur,
+        voor klus- en installatiebedrijven. Hieronder staat per stap wat er gebouwd is en wat je kunt proberen.
+      </p>
+      <p class="voortgang"><strong>{{ klaar }} van {{ stories|length }}</strong> stories werken</p>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section aria-labelledby="keten-kop">
+    <h2 id="keten-kop">De keten</h2>
+    <p class="sub">Van gemiste oproep tot monteur op de stoep. Elke stap is één user story.</p>
+    <ol class="keten">
+      {% for s in stories %}
+      <li class="keten-stap status-{{ s.status }}">
+        <span class="keten-nr">{{ loop.index }}</span>
+        <span class="keten-naam">{{ s.stap }}</span>
+        <span class="keten-code">{{ s.code }}</span>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <section aria-labelledby="stories-kop">
+    <h2 id="stories-kop">User stories</h2>
+    <div class="kaarten">
+      {% for s in stories %}
+      <article class="kaart" id="{{ s.code|lower }}">
+        <div class="kaart-kop">
+          <span class="code">{{ s.code }}</span>
+          <span class="badge status-{{ s.status }}">{{ s.status_label }}</span>
+        </div>
+        <h3>{{ s.titel }}</h3>
+        <p>{{ s.uitleg }}</p>
+        <ul>
+          {% for p in s.punten %}<li>{{ p }}</li>{% endfor %}
+        </ul>
+        {% if s.demo_url %}
+        <a class="knop" href="{{ s.demo_url }}">Probeer het</a>
+        {% else %}
+        <span class="knop knop-uit" aria-disabled="true">Nog niet klaar</span>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section aria-labelledby="volgorde-kop" class="volgorde">
+    <h2 id="volgorde-kop">Bouwvolgorde</h2>
+    <p class="sub">Van makkelijk naar moeilijk. Na elke stap testen we samen.</p>
+    <ol>
+      {% for code in bouwvolgorde %}
+        {% for s in stories if s.code == code %}
+        <li><span class="code">{{ s.code }}</span> {{ s.titel }} <span class="badge status-{{ s.status }}">{{ s.status_label }}</span></li>
+        {% endfor %}
+      {% endfor %}
+    </ol>
+  </section>
+</main>
+
+<footer class="voet">
+  <div class="wrap">
+    Demo-bedrijf in berichten: <strong>{{ bedrijfsnaam }}</strong> · aan te passen in <code>.env</code>
+  </div>
+</footer>
+{% endblock %}
