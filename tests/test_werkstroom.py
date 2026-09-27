@@ -66,3 +66,30 @@ def test_api_en_reset():
     assert client.get("/api/acties").json() == []
     for pad in ("/demo/gas", "/planner"):
         assert client.get(pad).status_code == 200
+
+
+def test_echte_verzending_valt_terug_bij_fout(logboek, monkeypatch):
+    from app import config
+    from app.core import whatsapp
+
+    def kapot(_naar, _tekst):
+        raise whatsapp.WhatsAppFout("131047: buiten 24-uursvenster")
+
+    monkeypatch.setattr(config, "SIMULATIE_WHATSAPP", False)
+    monkeypatch.setattr(whatsapp, "stuur_tekst", kapot)
+    uitkomst = verwerk_bericht(logboek, "demo", "ik ruik gas")
+    assert uitkomst["route"] == "gasmelding"
+    assert len(logboek.lees(soort="verzendfout")) == 1
+    assert len(logboek.lees(soort="gasmelding")) == 1
+
+
+def test_echte_verzending_gebruikt_testnummer_voor_demoklant(logboek, monkeypatch):
+    from app import config
+    from app.core import whatsapp
+
+    verstuurd = []
+    monkeypatch.setattr(config, "SIMULATIE_WHATSAPP", False)
+    monkeypatch.setattr(config, "WHATSAPP_TEST_ONTVANGER", "+31600000000")
+    monkeypatch.setattr(whatsapp, "stuur_tekst", lambda naar, tekst: verstuurd.append(naar) or "wamid.test")
+    verwerk_bericht(logboek, "demo", "ik ruik gas")
+    assert verstuurd == ["+31600000000"]

@@ -30,5 +30,14 @@ SIMULATIE_AGENDA = _bool("SIMULATIE_AGENDA", True)
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
+# WhatsApp Cloud API (zie docs/accounts.md)
+WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
+WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "")
+WHATSAPP_BUSINESS_ACCOUNT_ID = os.getenv("WHATSAPP_BUSINESS_ACCOUNT_ID", "")
+WHATSAPP_APP_SECRET = os.getenv("WHATSAPP_APP_SECRET", "")
+WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "")
+WHATSAPP_TEST_ONTVANGER = os.getenv("WHATSAPP_TEST_ONTVANGER", "")
+WHATSAPP_API_VERSIE = os.getenv("WHATSAPP_API_VERSIE", "v23.0")
+
 # Database met het actielog.
 DB_PAD = os.getenv("DB_PAD", str(ROOT / "omnia.db"))

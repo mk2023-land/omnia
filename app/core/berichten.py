@@ -1,15 +1,32 @@
 """Berichten naar de klant sturen.
 
 In simulatie wordt het bericht alleen gelogd en verschijnt het op de demotelefoon
-in de browser. Zodra de WhatsApp Cloud API klaarstaat (US-1), komt hier de echte
-verzending bij.
+in de browser. Met SIMULATIE_WHATSAPP=false gaat het ook echt via WhatsApp.
 """
 
 from app import config
+from app.core import whatsapp
 from app.core.logboek import Logboek
+
+# De klant op de demopagina heet "demo"; in het echt is dat het testnummer.
+DEMO_KLANT = "demo"
+
+
+def telefoonnummer(klant: str) -> str:
+    return config.WHATSAPP_TEST_ONTVANGER if klant == DEMO_KLANT else klant
 
 
 def verstuur(logboek: Logboek, naar: str, tekst: str, kanaal: str = "whatsapp") -> dict:
-    if not config.SIMULATIE_WHATSAPP:
-        raise NotImplementedError("Echte WhatsApp-verzending volgt in US-1.")
-    return logboek.schrijf(naar, "bericht_uit", tekst=tekst, kanaal=kanaal, gesimuleerd=True)
+    if config.SIMULATIE_WHATSAPP:
+        return logboek.schrijf(naar, "bericht_uit", tekst=tekst, kanaal=kanaal, gesimuleerd=True)
+
+    # Echt versturen. Mislukt dat, dan loggen we de fout maar gaat de werkstroom door:
+    # het bericht staat dan in elk geval op het plannerscherm.
+    try:
+        bericht_id = whatsapp.stuur_tekst(telefoonnummer(naar), tekst)
+    except (whatsapp.WhatsAppFout, OSError) as fout:
+        logboek.schrijf(naar, "verzendfout", kanaal=kanaal, fout=str(fout))
+        return logboek.schrijf(naar, "bericht_uit", tekst=tekst, kanaal=kanaal, gesimuleerd=False, verzonden=False)
+    return logboek.schrijf(
+        naar, "bericht_uit", tekst=tekst, kanaal=kanaal, gesimuleerd=False, verzonden=True, bericht_id=bericht_id
+    )
