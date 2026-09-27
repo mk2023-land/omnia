@@ -53,7 +53,7 @@ STORIES: list[Story] = [
             "Werkt ook als de AI niet bereikbaar is",
         ),
         status="gesimuleerd",
-        demo_url="/demo/gas",
+        demo_url="/demo/telefoon",
     ),
     Story(
         code="US-3",
@@ -65,6 +65,8 @@ STORIES: list[Story] = [
             "Niet leesbaar blijft leeg: er wordt niets gegokt",
             "Spoed is een voorstel, met reden",
         ),
+        status="live",
+        demo_url="/demo/telefoon",
     ),
     Story(
         code="US-4",

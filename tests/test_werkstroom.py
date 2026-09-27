@@ -14,7 +14,7 @@ def logboek(tmp_path):
     return Logboek(tmp_path / "log.db")
 
 
-def ai_plat(_tekst):
+def ai_plat(_tekst, _foto=None, _media_type=None):
     raise ConnectionError("AI-dienst niet bereikbaar")
 
 
@@ -38,7 +38,7 @@ def test_gas_werkt_ook_als_ai_plat_ligt(logboek):
 
 def test_ai_wordt_bij_gas_niet_aangeroepen(logboek):
     aangeroepen = []
-    verwerk_bericht(logboek, "klant1", "ik ruik gas", ai_stap=lambda t: aangeroepen.append(t) or {})
+    verwerk_bericht(logboek, "klant1", "ik ruik gas", ai_stap=lambda t, f, m: aangeroepen.append(t) or {})
     assert aangeroepen == []
 
 
@@ -58,13 +58,13 @@ def test_ai_fout_bij_gewone_storing_wordt_gelogd(logboek):
 def test_api_en_reset():
     client = TestClient(app)
     client.post("/api/reset")
-    r = client.post("/api/bericht", json={"tekst": "ik ruik gas"})
+    r = client.post("/api/bericht", data={"tekst": "ik ruik gas"})
     assert r.json()["route"] == "gasmelding"
     soorten = [a["soort"] for a in client.get("/api/acties").json()]
     assert soorten == ["bericht_in", "bericht_uit", "gasmelding"]
     client.post("/api/reset")
     assert client.get("/api/acties").json() == []
-    for pad in ("/demo/gas", "/planner"):
+    for pad in ("/demo/gas", "/demo/telefoon", "/planner"):
         assert client.get(pad).status_code == 200
 
 

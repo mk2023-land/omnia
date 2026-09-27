@@ -6,7 +6,7 @@ op `false` zodra het account klaarstaat. Sleutels komen **alleen** in `.env`, no
 | Dienst | Voor | Status | Nodig in `.env` |
 |---|---|---|---|
 | WhatsApp Cloud API (Meta) | US-1, US-2, US-4 | ✅ Werkt (testnummer) | `WHATSAPP_*` |
-| Anthropic API | US-3 | Sleutel aanwezig, nog invullen | `ANTHROPIC_API_KEY` |
+| Anthropic API | US-3 | ✅ Werkt | `ANTHROPIC_API_KEY` (optioneel `CLAUDE_MODEL`, `CLAUDE_EFFORT`) |
 | ngrok | Webhooks (US-1, inkomende WhatsApp) | Nog regelen | `PUBLIEK_ADRES` |
 | Twilio | US-1 | Nog regelen | `TWILIO_*` |
 | Google Agenda | US-4 | Nog regelen | `GOOGLE_*` |

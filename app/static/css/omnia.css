@@ -134,6 +134,40 @@ button.knop { border: 0; cursor: pointer; font-family: inherit; font-size: 1rem;
 .alarm-item:first-child { border-top: 0; }
 .alarm-tekst { font-size: 1.1rem; margin: 4px 0; }
 @keyframes knipper { 50% { box-shadow: 0 0 0 6px rgba(179,38,30,.25); } }
+/* Melding in de gewone rij (US-3) */
+#rij .leeg { color: var(--tekst-zacht); margin: 0; }
+.melding { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid var(--lijn); }
+.melding:first-child { border-top: 0; }
+.melding-foto { width: 88px; height: 88px; object-fit: cover; border-radius: 10px; border: 1px solid var(--lijn); display: block; }
+.melding-inhoud { flex: 1; min-width: 0; }
+.melding-kop { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+.melding-klacht { margin: 6px 0 2px; }
+.melding-reden { margin: 0; color: var(--tekst-zacht); font-size: .9rem; }
+.velden { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.velden div { background: var(--creme-licht); border: 1px solid var(--lijn); border-radius: 8px; padding: 6px 10px; min-width: 0; }
+.velden dt { font-size: .75rem; color: var(--tekst-zacht); text-transform: uppercase; letter-spacing: .05em; }
+.velden dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.velden dd.leeg { font-weight: 400; color: var(--tekst-zacht); font-style: italic; }
+.badge-spoed { background: #fdecea; color: #b3261e; }
+.badge-rustig { background: #dcebe6; color: var(--petrol); }
+.badge-bezig { background: #fbecd0; color: #7a5a1e; }
+.samenvatting { background: #fff; border: 1px solid var(--petrol-zacht); border-radius: var(--radius); padding: 4px 20px 6px; margin: -12px 0 24px; }
+.samenvatting[hidden] { display: none; }
+.samenvatting h3 { margin: 14px 0 0; font-size: 1rem; }
+.knop-rand { border: 1px solid var(--petrol-zacht); cursor: pointer; }
+
+/* Telefoon: foto's */
+.bel img { display: block; max-width: 100%; border-radius: 8px; margin-bottom: 6px; }
+.bijlage { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 12px 0; padding: 6px 10px; background: var(--creme-licht); border: 1px solid var(--lijn); border-radius: 10px; font-size: .88rem; }
+.bijlage[hidden] { display: none; }
+.bijlage span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bijlage button { border: 0; background: none; cursor: pointer; color: var(--tekst-zacht); font-size: 1rem; }
+.knop-foto { display: grid; place-items: center; width: 42px; flex: none; border: 1px solid var(--lijn); border-radius: 10px; color: var(--petrol); cursor: pointer; }
+.knop-foto:hover { border-color: var(--petrol-zacht); }
+.telefoon-fout { margin: 0 12px 10px; color: #b3261e; font-size: .88rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+button.knop:disabled { opacity: .6; cursor: wait; }
+
 .rij { list-style: none; padding: 0; margin: 0; }
 .rij li { padding: 10px 0; border-top: 1px solid var(--lijn); }
 .rij li:first-child { border-top: 0; }
@@ -179,6 +213,7 @@ button.knop { border: 0; cursor: pointer; font-family: inherit; font-size: 1rem;
 .log td:nth-child(3) { white-space: nowrap; font-weight: 500; }
 .log td:nth-child(4) { overflow-wrap: anywhere; }
 .log .leeg { color: var(--tekst-zacht); }
+.log a { color: var(--petrol); }
 .log-gasmelding td { background: #fdecea; }
 .log-gasmelding td:nth-child(3), .log-ai_fout td:nth-child(3), .log-verzendfout td:nth-child(3) { color: #b3261e; }
 .simuleer { margin-top: 16px; }
@@ -204,6 +239,8 @@ button.knop { border: 0; cursor: pointer; font-family: inherit; font-size: 1rem;
   .demo-kolommen { grid-template-columns: 1fr; }
   .balk-titel { flex-basis: 100%; order: 3; padding-bottom: 8px; }
   .log th:nth-child(1), .log td:nth-child(1) { display: none; }
+  .velden { grid-template-columns: 1fr 1fr; }
+  .melding-foto { width: 64px; height: 64px; }
   .demo-twee { grid-template-columns: 1fr; }
   .telefoon { height: 560px; }
 }

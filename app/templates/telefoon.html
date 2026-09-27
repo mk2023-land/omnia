@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block titel %}OMNIA · {% if met_telefoon %}Demotelefoon{% else %}Plannerscherm{% endif %}{% endblock %}
+{% block inhoud %}
+{% set titel_balk = "Demotelefoon · US-2 en US-3" if met_telefoon else "Plannerscherm · " ~ bedrijfsnaam %}
+{% set actief = "telefoon" if met_telefoon else "planner" %}
+{% include "_balk.html" %}
+
+<main class="wrap demo {% if met_telefoon %}demo-twee{% endif %}">
+  {% if met_telefoon %}
+  <section class="telefoon" aria-label="Telefoon van de klant">
+    <div class="telefoon-kop">
+      <strong>{{ bedrijfsnaam }}</strong>
+      <span>WhatsApp · gesimuleerd</span>
+    </div>
+    <div class="chat" id="chat">
+      <p class="chat-leeg">Stuur een bericht als klant.</p>
+    </div>
+    <div class="snel">
+      <button type="button" data-tekst="Remeha ketel geeft F28, geen warm water">ketel geeft F28</button>
+      <button type="button" data-tekst="mijn ketel maakt een tikkend geluid">tikkend geluid</button>
+      <button type="button" data-tekst="ik ruik gas">ik ruik gas</button>
+    </div>
+    <div class="bijlage" id="bijlage" hidden>
+      <span id="bijlage-naam"></span>
+      <button type="button" id="bijlage-weg" aria-label="Foto weghalen">✕</button>
+    </div>
+    <form class="invoer" id="invoer">
+      <label class="knop-foto" title="Foto toevoegen">
+        <input type="file" id="foto" accept="image/*" hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9Zm3 5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/></svg>
+        <span class="sr-only">Foto toevoegen</span>
+      </label>
+      <input id="tekst" autocomplete="off" placeholder="Typ een bericht…" aria-label="Bericht">
+      <button class="knop" type="submit" id="stuurknop">Stuur</button>
+    </form>
+    <p class="telefoon-fout" id="fout" hidden></p>
+  </section>
+  {% endif %}
+
+  <section class="planner" aria-label="Plannerscherm">
+    <h2>Plannerscherm</h2>
+    <div id="alarm" class="alarm" hidden>
+      <div class="alarm-kop">Gasmelding · niet in de gewone rij</div>
+      <div id="alarm-lijst"></div>
+    </div>
+
+    <h3>Gewone rij</h3>
+    <div id="rij"><p class="leeg">Nog geen meldingen.</p></div>
+
+    {% if met_telefoon %}
+    <details class="uitleg">
+      <summary>Hoe werkt het?</summary>
+      <p><strong>Gaslucht (US-2).</strong> Elk bericht gaat eerst langs een vaste woordenlijst (gas, gaslucht, ruik gas en varianten, ook met tikfouten).
+         Dat gebeurt vóór de AI en zonder taalmodel, dus het werkt ook als de AI-dienst plat ligt.
+         Bij een treffer krijgt de klant direct 0800-9009 en een veiligheidstekst, en komt de melding hier bovenaan.</p>
+      <p><strong>Uitlezen (US-3).</strong> Anders leest de AI uit tekst en foto het merk, type, foutcode, de klacht en een spoedvoorstel met reden.
+         Wat niet te lezen is, blijft leeg: er wordt niets gegokt. Stuur bijvoorbeeld een foto van het typeplaatje van je eigen ketel.</p>
+    </details>
+    {% endif %}
+  </section>
+</main>
+
+<script src="{{ url_for('static', path='js/omnia.js') }}?v={{ css_versie() }}"></script>
+<script>
+const chat = document.getElementById("chat");
+let laatste = "";
+
+function teken(acties) {
+  const e = Omnia.esc;
+  if (chat) {
+    const berichten = acties.filter((a) => a.soort === "bericht_in" || a.soort === "bericht_uit");
+    chat.innerHTML = berichten.length
+      ? berichten.map((a) => `<div class="bel ${a.soort === "bericht_in" ? "bel-klant" : "bel-bedrijf"}">${
+          a.foto_url ? `<img src="${e(a.foto_url)}" alt="Foto">` : ""}${e(a.tekst)}<span>${Omnia.tijd(a.tijd)}</span></div>`).join("")
+      : '<p class="chat-leeg">Stuur een bericht als klant.</p>';
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  const gas = acties.filter((a) => a.soort === "gasmelding").reverse();
+  document.getElementById("alarm").hidden = gas.length === 0;
+  document.getElementById("alarm-lijst").innerHTML = gas.map((a) => `
+    <div class="alarm-item">
+      <div><strong>${Omnia.tijd(a.tijd)}</strong> · klant ${e(a.klant)}</div>
+      <div class="alarm-tekst">“${e(a.tekst)}”</div>
+      <div>Klant heeft <strong>${e(a.noodnummer)}</strong> en de veiligheidstekst gekregen. Bel de klant direct.</div>
+    </div>`).join("");
+
+  const meldingen = Omnia.meldingen(acties).reverse();
+  document.getElementById("rij").innerHTML = meldingen.length
+    ? meldingen.map(Omnia.meldingHtml).join("")
+    : '<p class="leeg">Nog geen meldingen.</p>';
+}
+
+async function ververs() {
+  try {
+    const acties = await Omnia.acties();
+    const sleutel = acties.map((a) => a.id).join(",");
+    if (sleutel !== laatste) { laatste = sleutel; teken(acties); }
+  } catch (e) { /* server even weg: volgende keer opnieuw */ }
+}
+
+const form = document.getElementById("invoer");
+if (form) {
+  const fotoVeld = document.getElementById("foto");
+  const bijlage = document.getElementById("bijlage");
+  const foutVeld = document.getElementById("fout");
+  const knop = document.getElementById("stuurknop");
+
+  const toonBijlage = () => {
+    const f = fotoVeld.files[0];
+    bijlage.hidden = !f;
+    document.getElementById("bijlage-naam").textContent = f ? `📷 ${f.name}` : "";
+  };
+  fotoVeld.addEventListener("change", toonBijlage);
+  document.getElementById("bijlage-weg").addEventListener("click", () => { fotoVeld.value = ""; toonBijlage(); });
+
+  async function stuur(tekst) {
+    const foto = fotoVeld.files[0] || null;
+    if (!tekst.trim() && !foto) return;
+    knop.disabled = true; knop.textContent = "…";
+    const fout = await Omnia.stuur(tekst, foto);
+    knop.disabled = false; knop.textContent = "Stuur";
+    foutVeld.hidden = !fout; foutVeld.textContent = fout || "";
+    if (!fout) { fotoVeld.value = ""; toonBijlage(); }
+    ververs();
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const veld = document.getElementById("tekst");
+    stuur(veld.value);
+    veld.value = "";
+  });
+  document.querySelectorAll(".snel button").forEach((b) => b.addEventListener("click", () => stuur(b.dataset.tekst)));
+}
+
+document.getElementById("reset").addEventListener("click", async () => { await Omnia.reset(); ververs(); });
+
+ververs();
+setInterval(ververs, 1000);
+</script>
+{% endblock %}

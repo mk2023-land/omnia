@@ -29,6 +29,8 @@ SIMULATIE_WHATSAPP = _bool("SIMULATIE_WHATSAPP", True)
 SIMULATIE_AGENDA = _bool("SIMULATIE_AGENDA", True)
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-5")
+CLAUDE_EFFORT = os.getenv("CLAUDE_EFFORT", "low")  # low | medium | high
 
 # WhatsApp Cloud API (zie docs/accounts.md)
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")

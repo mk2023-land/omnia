@@ -5,25 +5,32 @@ Starten:  .venv\\Scripts\\python -m uvicorn app.main:app --reload
 
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
-
 from app import config
-from app.core import rekensom
+from app.core import fotos, rekensom
 from app.core.logboek import Logboek
-from app.core.werkstroom import verwerk_bericht
+from app.core.uitlezen import lees_uit
+from app.core.werkstroom import ai_uitlezen, verwerk_bericht
 from app.stories import BOUWVOLGORDE, STORIES
 
 APP_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(title="OMNIA-demo")
 app.mount("/static", StaticFiles(directory=APP_DIR / "static"), name="static")
+FOTO_MAP = config.ROOT / "data" / "fotos"
+FOTO_MAP.mkdir(parents=True, exist_ok=True)
+app.mount("/fotos", StaticFiles(directory=FOTO_MAP), name="fotos")
 templates = Jinja2Templates(directory=APP_DIR / "templates")
-# Versienummer achter het stijlbestand, zodat de browser nooit een oude versie gebruikt.
-templates.env.globals["css_versie"] = int((APP_DIR / "static/css/omnia.css").stat().st_mtime)
+
+# Versienummer achter CSS en JS, zodat de browser nooit een oude versie gebruikt.
+def _css_versie() -> int:
+    return int(max(p.stat().st_mtime for p in (APP_DIR / "static").rglob("*.*s")))
+
+
+templates.env.globals["css_versie"] = _css_versie
 app.state.logboek = Logboek(config.DB_PAD)
 
 
@@ -55,30 +62,53 @@ def demoscherm(request: Request):
     )
 
 
+@app.get("/demo/telefoon", response_class=HTMLResponse)
 @app.get("/demo/gas", response_class=HTMLResponse)
-def demo_gas(request: Request):
+def demotelefoon(request: Request):
     return templates.TemplateResponse(
-        request, "demo_gas.html", {"bedrijfsnaam": config.BEDRIJFSNAAM, "met_telefoon": True}
+        request, "telefoon.html", {"bedrijfsnaam": config.BEDRIJFSNAAM, "met_telefoon": True}
     )
 
 
 @app.get("/planner", response_class=HTMLResponse)
 def planner(request: Request):
     return templates.TemplateResponse(
-        request, "demo_gas.html", {"bedrijfsnaam": config.BEDRIJFSNAAM, "met_telefoon": False}
+        request, "telefoon.html", {"bedrijfsnaam": config.BEDRIJFSNAAM, "met_telefoon": False}
     )
 
 
 # ---------- API ----------
 
-class Bericht(BaseModel):
-    klant: str = "demo"
-    tekst: str
+MAX_FOTO_BYTES = 20 * 1024 * 1024
 
 
 @app.post("/api/bericht")
-def bericht_in(bericht: Bericht, request: Request):
-    return verwerk_bericht(logboek(request), bericht.klant, bericht.tekst)
+async def bericht_in(
+    request: Request,
+    achtergrond: BackgroundTasks,
+    tekst: str = Form(""),
+    klant: str = Form("demo"),
+    foto: UploadFile | None = File(None),
+):
+    jpeg, media_type, foto_url = None, "image/jpeg", None
+    if foto is not None and foto.filename:
+        data = await foto.read()
+        if len(data) > MAX_FOTO_BYTES:
+            raise HTTPException(413, "Foto is groter dan 20 MB.")
+        try:
+            jpeg, media_type, naam = fotos.verwerk(data, FOTO_MAP)
+        except fotos.FotoFout as fout:
+            raise HTTPException(422, str(fout)) from fout
+        foto_url = f"/fotos/{naam}"
+    if not tekst.strip() and jpeg is None:
+        raise HTTPException(422, "Stuur tekst, een foto of allebei.")
+
+    log = logboek(request)
+    uitkomst = verwerk_bericht(log, klant, tekst, foto=jpeg, media_type=media_type, foto_url=foto_url)
+    if uitkomst["route"] == "gewone_rij":
+        # De AI draait op de achtergrond; de schermen zien het resultaat vanzelf verschijnen.
+        achtergrond.add_task(ai_uitlezen, log, klant, tekst, jpeg, media_type, lees_uit)
+    return uitkomst
 
 
 @app.get("/api/acties")

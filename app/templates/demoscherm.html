@@ -16,10 +16,15 @@
       <div class="start-knoppen">
         <button type="button" class="knop" data-tekst="Remeha ketel geeft F28, geen warm water">Ketel geeft F28</button>
         <button type="button" class="knop knop-alarm" data-tekst="ik ruik gas in de keuken">Ik ruik gas</button>
+        <label class="knop knop-licht knop-rand">Foto van ketel sturen…<input type="file" id="start-foto" accept="image/*" hidden></label>
       </div>
-      <p class="start-of">Of open de <a href="/demo/gas" target="_blank" rel="noopener">demotelefoon</a> in een tweede venster.</p>
+      <p class="start-of">Of open de <a href="/demo/telefoon" target="_blank" rel="noopener">demotelefoon</a> in een tweede venster.</p>
     </div>
     <ol class="stappen" id="stappen"></ol>
+    <div class="samenvatting" id="samenvatting" hidden>
+      <h3>Samenvatting voor de planner</h3>
+      <div id="samenvatting-inhoud"></div>
+    </div>
   </section>
 
   <div class="demo-kolommen">
@@ -72,6 +77,7 @@
   </div>
 </main>
 
+<script src="{{ url_for('static', path='js/omnia.js') }}?v={{ css_versie() }}"></script>
 <script>
 const VOORBEELD = {{ voorbeeld | tojson }};
 const euro = new Intl.NumberFormat("nl-NL", {style: "currency", currency: "EUR", maximumFractionDigits: 0});
@@ -96,12 +102,12 @@ const LABELS = {
 
 function details(a) {
   switch (a.soort) {
-    case "bericht_in": return `“${esc(a.tekst)}”`;
+    case "bericht_in": return `${a.foto_url ? `<a href="${esc(a.foto_url)}" target="_blank" rel="noopener">📷 foto</a> ` : ""}${a.tekst ? `“${esc(a.tekst)}”` : ""}`;
     case "bericht_uit": return `${esc(a.kanaal)}${a.gesimuleerd ? " (gesimuleerd)" : a.verzonden ? " (verstuurd)" : " (niet verstuurd)"}: ${esc(a.tekst).slice(0, 90)}…`;
     case "gasmelding": return `Noodnummer ${esc(a.noodnummer)} gestuurd · herkend: ${esc((a.woorden || []).join(" + "))}`;
     case "ai_fout": case "verzendfout": return esc(a.fout);
-    case "ai_uitvoer": return esc(["merk", "type", "foutcode", "klacht"].map((k) => a[k] ? `${k}: ${a[k]}` : null).filter(Boolean).join(" · "));
-    case "gewone_rij": return "Wacht op AI-uitvoer (US-3)";
+    case "ai_uitvoer": return esc(["merk", "type", "foutcode"].map((k) => `${k}: ${a[k] || "–"}`).join(" · ") + ` · ${a.spoed ? "spoed" : "geen spoed"}`);
+    case "gewone_rij": return "Doorgestuurd naar de AI";
     default: return esc(a.tekst || "");
   }
 }
@@ -123,6 +129,10 @@ function tekenStappen(acties) {
                 : s.nvt ? "n.v.t.: direct naar planner" : "wacht…";
     return `<li class="stap ${klasse}"><span class="stap-nr">${i + 1}</span><strong>${s.naam}</strong><span>${onder}</span></li>`;
   }).join("");
+
+  const melding = Omnia.meldingen(acties).at(-1);
+  document.getElementById("samenvatting").hidden = !melding;
+  if (melding) document.getElementById("samenvatting-inhoud").innerHTML = Omnia.meldingHtml(melding);
 
   const duur = document.getElementById("run-duur");
   if (!start) duur.textContent = "Wacht op een bericht van de klant…";
@@ -156,11 +166,16 @@ async function ververs() {
   } catch (e) { /* server even weg */ }
 }
 
-async function stuur(tekst) {
-  if (!tekst.trim()) return;
-  await fetch("/api/bericht", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({tekst})});
+async function stuur(tekst, foto = null) {
+  const fout = await Omnia.stuur(tekst, foto);
+  if (fout) alert(fout);
   ververs();
 }
+document.getElementById("start-foto").addEventListener("change", (e) => {
+  const foto = e.target.files[0];
+  if (foto) stuur("", foto);
+  e.target.value = "";
+});
 
 document.getElementById("simuleer").addEventListener("submit", (e) => {
   e.preventDefault();
