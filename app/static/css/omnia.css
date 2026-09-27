@@ -147,6 +147,15 @@ button.knop { border: 0; cursor: pointer; font-family: inherit; font-size: 1rem;
 .sectie-kop { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .sectie-kop .sub { margin: 0; }
 
+.start { background: #fff; border: 2px dashed var(--goud); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 12px; }
+.start[hidden] { display: none; }
+.start p { margin: 0; }
+.start-knoppen { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.start-knoppen .knop { margin: 0; }
+.knop-alarm { background: #b3261e; }
+.knop-alarm:hover { background: #8f1e18; }
+.start-of { color: var(--tekst-zacht); font-size: .9rem; }
+.start-of a { color: var(--petrol); }
 .stappen { list-style: none; padding: 0; margin: 0 0 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .stap { background: #fff; border: 1px solid var(--lijn); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; color: var(--tekst-zacht); }
 .stap strong { color: var(--tekst); font-size: 1.05rem; }

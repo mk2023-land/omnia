@@ -11,6 +11,14 @@
       <h2 id="run-kop">De run</h2>
       <span class="sub" id="run-duur">Wacht op een bericht van de klant…</span>
     </div>
+    <div class="start" id="start">
+      <p><strong>Start een run</strong>: stuur als klant een bericht. Kies een voorbeeld of typ zelf iets.</p>
+      <div class="start-knoppen">
+        <button type="button" class="knop" data-tekst="Remeha ketel geeft F28, geen warm water">Ketel geeft F28</button>
+        <button type="button" class="knop knop-alarm" data-tekst="ik ruik gas in de keuken">Ik ruik gas</button>
+      </div>
+      <p class="start-of">Of open de <a href="/demo/gas" target="_blank" rel="noopener">demotelefoon</a> in een tweede venster.</p>
+    </div>
     <ol class="stappen" id="stappen"></ol>
   </section>
 
@@ -99,6 +107,7 @@ function details(a) {
 }
 
 function tekenStappen(acties) {
+  document.getElementById("start").hidden = acties.length > 0;
   const start = acties.length ? new Date(acties[0].tijd) : null;
   const eerste = (...soorten) => acties.find((a) => soorten.includes(a.soort));
   const gas = eerste("gasmelding");
@@ -147,14 +156,19 @@ async function ververs() {
   } catch (e) { /* server even weg */ }
 }
 
-document.getElementById("simuleer").addEventListener("submit", async (e) => {
+async function stuur(tekst) {
+  if (!tekst.trim()) return;
+  await fetch("/api/bericht", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({tekst})});
+  ververs();
+}
+
+document.getElementById("simuleer").addEventListener("submit", (e) => {
   e.preventDefault();
   const veld = document.getElementById("sim-tekst");
-  if (!veld.value.trim()) return;
-  await fetch("/api/bericht", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({tekst: veld.value})});
+  stuur(veld.value);
   veld.value = "";
-  ververs();
 });
+document.querySelectorAll(".start-knoppen button").forEach((b) => b.addEventListener("click", () => stuur(b.dataset.tekst)));
 
 // ---------- Rekensom ----------
 
