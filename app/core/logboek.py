@@ -53,6 +53,13 @@ class Logboek:
             for r in rijen
         ]
 
+    def haal(self, actie_id: int) -> dict | None:
+        with self._verbind() as db:
+            r = db.execute("SELECT * FROM acties WHERE id = ?", (actie_id,)).fetchone()
+        if r is None:
+            return None
+        return {"id": r["id"], "tijd": r["tijd"], "klant": r["klant"], "soort": r["soort"], **json.loads(r["data"])}
+
     def reset(self) -> None:
         with self._slot, self._verbind() as db:
             db.execute("DELETE FROM acties")

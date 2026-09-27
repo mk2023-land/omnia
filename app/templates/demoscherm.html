@@ -98,6 +98,9 @@ const LABELS = {
   voorstel: "Planningsvoorstel",
   goedkeuring: "Goedgekeurd",
   verzendfout: "Verzenden mislukt",
+  andere_tijd: "Andere tijd gevraagd",
+  zelf_bellen: "Planner belt zelf",
+  geen_voorstel: "Geen vrij blok",
 };
 
 function details(a) {
@@ -108,6 +111,10 @@ function details(a) {
     case "ai_fout": case "verzendfout": return esc(a.fout);
     case "ai_uitvoer": return esc(["merk", "type", "foutcode"].map((k) => `${k}: ${a[k] || "–"}`).join(" · ") + ` · ${a.spoed ? "spoed" : "geen spoed"}`);
     case "gewone_rij": return "Doorgestuurd naar de AI";
+    case "voorstel": return `${esc(a.tijd_tekst)} · ${esc(a.monteur)} · ${esc(a.reden)}`;
+    case "goedkeuring": return `${esc(a.tijd_tekst)} · ${esc(a.monteur)} · bericht naar klant`;
+    case "geen_voorstel": return esc(a.reden);
+    case "andere_tijd": case "zelf_bellen": return "Niets naar de klant gestuurd";
     default: return esc(a.tekst || "");
   }
 }
@@ -121,7 +128,7 @@ function tekenStappen(acties) {
     {naam: "Bericht", actie: eerste("bericht_in")},
     {naam: gas ? "Gasmelding" : "AI-uitvoer", actie: gas || eerste("ai_uitvoer", "ai_fout"), alarm: !!gas},
     {naam: "Voorstel", actie: eerste("voorstel"), nvt: !!gas},
-    {naam: "Goedkeuring", actie: eerste("goedkeuring"), nvt: !!gas},
+    {naam: eerste("zelf_bellen") && !eerste("goedkeuring") ? "Zelf bellen" : "Goedkeuring", actie: eerste("goedkeuring", "zelf_bellen"), nvt: !!gas},
   ];
   document.getElementById("stappen").innerHTML = stappen.map((s, i) => {
     const klasse = s.alarm ? "stap-alarm" : s.actie ? "stap-klaar" : s.nvt ? "stap-nvt" : "";
@@ -226,6 +233,7 @@ document.getElementById("reset").addEventListener("click", async () => {
   ververs();
 });
 
+Omnia.koppelVoorstelKnoppen(ververs);
 vulVoorbeeld();
 reken();
 ververs();

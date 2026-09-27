@@ -3,13 +3,16 @@
 Volgorde:
   1. Gaslucht-controle (US-2): vaste regel, altijd eerst, geen AI.
   2. AI-stap (US-3): storing uitlezen uit tekst en foto.
+  3. Planningsvoorstel (US-4): eerste vrije blok, wacht op goedkeuring van de planner.
 """
 
 from collections.abc import Callable
 
 from app import config
 from app.core import berichten
+from app.core.agenda import Agenda
 from app.core.logboek import Logboek
+from app.core.planning import maak_voorstel
 from app.core.veiligheid import NOODNUMMER_GAS, controleer_gaslucht, veiligheidsbericht
 
 # Een AI-stap krijgt tekst, foto (of None) en het beeldtype, en geeft een uitlezing terug.
@@ -24,6 +27,7 @@ def verwerk_bericht(
     media_type: str = "image/jpeg",
     foto_url: str | None = None,
     ai_stap: AiStap | None = None,
+    agenda: Agenda | None = None,
 ) -> dict:
     logboek.schrijf(klant, "bericht_in", tekst=tekst, foto_url=foto_url)
 
@@ -43,14 +47,16 @@ def verwerk_bericht(
 
     # 2. Gewone rij. De AI-stap draait direct als die is meegegeven,
     #    anders plant de aanroeper hem zelf in (op de achtergrond).
-    logboek.schrijf(klant, "gewone_rij", tekst=tekst)
+    melding = logboek.schrijf(klant, "gewone_rij", tekst=tekst)
+    uitkomst = {"route": "gewone_rij", "melding_id": melding["id"]}
     if ai_stap is None:
-        return {"route": "gewone_rij"}
-    return {"route": "gewone_rij", **ai_uitlezen(logboek, klant, tekst, foto, media_type, ai_stap)}
+        return uitkomst
+    return {**uitkomst, **ai_uitlezen(logboek, klant, tekst, foto, media_type, ai_stap, melding["id"], agenda)}
 
 
 def ai_uitlezen(
-    logboek: Logboek, klant: str, tekst: str, foto: bytes | None, media_type: str, ai_stap: AiStap
+    logboek: Logboek, klant: str, tekst: str, foto: bytes | None, media_type: str, ai_stap: AiStap,
+    melding_id: int | None = None, agenda: Agenda | None = None,
 ) -> dict:
     """Leest de storing uit. Mag falen zonder dat er iets misgaat: de melding staat al in de rij."""
     try:
@@ -60,7 +66,11 @@ def ai_uitlezen(
         return {"ai_fout": str(fout)}
     logboek.schrijf(klant, "ai_uitvoer", **uitlezing)
     berichten.verstuur(logboek, klant, bevestiging(uitlezing))
-    return {"ai": uitlezing}
+    if agenda is None or melding_id is None:
+        return {"ai": uitlezing}
+    # Het voorstel gaat alleen naar de planner; de klant hoort pas iets na goedkeuring.
+    voorstel = maak_voorstel(logboek, agenda, klant, melding_id, uitlezing)
+    return {"ai": uitlezing, "voorstel": voorstel}
 
 
 def bevestiging(u: dict) -> str:

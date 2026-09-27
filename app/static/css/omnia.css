@@ -156,6 +156,37 @@ button.knop { border: 0; cursor: pointer; font-family: inherit; font-size: 1rem;
 .samenvatting h3 { margin: 14px 0 0; font-size: 1rem; }
 .knop-rand { border: 1px solid var(--petrol-zacht); cursor: pointer; }
 
+/* Planningsvoorstel (US-4) */
+.voorstel { margin-top: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--petrol-zacht); background: #f1f6f4; }
+.voorstel small { color: var(--tekst-zacht); }
+.voorstel-label { font-size: .8rem; color: var(--tekst-zacht); text-transform: uppercase; letter-spacing: .05em; }
+.voorstel-tijd { font-size: 1.05rem; margin: 2px 0 10px; }
+.voorstel-knoppen { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.voorstel-knoppen .knop { margin: 0; padding: 8px 14px; font-size: .95rem; }
+.voorstel-wacht { border-style: dashed; color: var(--tekst-zacht); background: none; }
+.voorstel-klaar { background: var(--petrol); color: var(--creme); border-color: var(--petrol); }
+.voorstel-klaar small { color: #d7e3df; }
+.voorstel-bellen { background: #fbecd0; border-color: #e3c893; color: #5c4415; }
+
+/* Demo-agenda */
+.agenda-pagina { padding-top: 24px; padding-bottom: 32px; }
+.agenda-pagina h2 { margin: 0; font-size: 1.35rem; }
+.legenda { list-style: none; padding: 0; margin: 0 0 16px; display: flex; gap: 16px; flex-wrap: wrap; font-size: .9rem; color: var(--tekst-zacht); }
+.legenda li { display: flex; align-items: center; gap: 6px; }
+.legenda .blok { width: 18px; height: 14px; min-height: 0; padding: 0; }
+.agenda { display: grid; grid-template-columns: 130px repeat(5, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
+.agenda-kop { font-weight: 600; text-align: center; padding: 4px 0; }
+.agenda-monteur { font-weight: 600; align-self: center; }
+.agenda-dag { display: grid; gap: 4px; background: #fff; border: 1px solid var(--lijn); border-radius: 10px; padding: 6px; }
+.blok { border-radius: 6px; padding: 4px 6px; font-size: .75rem; min-height: 26px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+.blok span { font-variant-numeric: tabular-nums; }
+.blok em { font-style: normal; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blok-bezet { background: #e7e2d8; color: #8a8478; }
+.blok-vrij { background: #fff; border: 1px dashed #cfc7b8; color: #b5ad9e; }
+.blok-voorstel { background: #fff; border: 2px solid var(--petrol); color: var(--petrol); animation: knipper-petrol 1.4s ease-in-out infinite; }
+.blok-gepland { background: var(--goud); color: var(--petrol-diep); }
+@keyframes knipper-petrol { 50% { box-shadow: 0 0 0 4px rgba(17,66,65,.18); } }
+
 /* Telefoon: foto's */
 .bel img { display: block; max-width: 100%; border-radius: 8px; margin-bottom: 6px; }
 .bijlage { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 12px 0; padding: 6px 10px; background: var(--creme-licht); border: 1px solid var(--lijn); border-radius: 10px; font-size: .88rem; }
@@ -240,6 +271,10 @@ button.knop:disabled { opacity: .6; cursor: wait; }
   .balk-titel { flex-basis: 100%; order: 3; padding-bottom: 8px; }
   .log th:nth-child(1), .log td:nth-child(1) { display: none; }
   .velden { grid-template-columns: 1fr 1fr; }
+  .agenda { grid-template-columns: 1fr; }
+  .agenda > div:first-child, .agenda-kop { display: none; }
+  .agenda-monteur { margin-top: 12px; }
+  .agenda-dag { grid-template-columns: repeat(4, 1fr); }
   .melding-foto { width: 64px; height: 64px; }
   .demo-twee { grid-template-columns: 1fr; }
   .telefoon { height: 560px; }

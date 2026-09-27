@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block titel %}OMNIA · Demo-agenda{% endblock %}
+{% block inhoud %}
+{% set titel_balk = "US-4 · Demo-agenda" %}
+{% set actief = "agenda" %}
+{% include "_balk.html" %}
+
+<main class="wrap agenda-pagina">
+  <div class="sectie-kop">
+    <h2>Demo-agenda</h2>
+    <span class="sub">Drie fictieve monteurs · komende vijf werkdagen · {{ "lokaal" if simulatie else "Google Agenda" }}</span>
+  </div>
+  <ul class="legenda">
+    <li><span class="blok blok-bezet"></span> Bezet</li>
+    <li><span class="blok blok-vrij"></span> Vrij</li>
+    <li><span class="blok blok-voorstel"></span> Voorstel (wacht op planner)</li>
+    <li><span class="blok blok-gepland"></span> Ingepland via OMNIA</li>
+  </ul>
+  <div class="agenda" id="agenda"></div>
+</main>
+
+<script src="{{ url_for('static', path='js/omnia.js') }}?v={{ css_versie() }}"></script>
+<script>
+const BLOKKEN = {{ blokken | tojson }};
+const DAGEN = ["zo", "ma", "di", "wo", "do", "vr", "za"];
+let laatste = "";
+
+function teken(agenda, acties) {
+  const e = Omnia.esc;
+  // Open voorstellen: het laatste voorstel per melding, zonder besluit.
+  const open = Omnia.meldingen(acties).filter((m) => m.voorstel?.soort === "voorstel" && !m.besluit).map((m) => m.voorstel);
+  const zoek = (monteur, start) => agenda.afspraken.find((a) => a.monteur === monteur && a.start.startsWith(start));
+
+  const kop = agenda.dagen.map((d) => {
+    const dt = new Date(d + "T12:00");
+    return `<div class="agenda-kop">${DAGEN[dt.getDay()]} ${dt.getDate()}-${dt.getMonth() + 1}</div>`;
+  }).join("");
+
+  const rijen = agenda.monteurs.map((monteur) => {
+    const cellen = agenda.dagen.map((d) => `<div class="agenda-dag">${BLOKKEN.map(([van, tot]) => {
+      const start = `${d}T${van}`;
+      const afspraak = zoek(monteur, start);
+      const voorstel = open.find((v) => v.monteur === monteur && v.start.startsWith(start));
+      const soort = afspraak ? (afspraak.soort === "gepland" ? "gepland" : "bezet") : voorstel ? "voorstel" : "vrij";
+      const tekst = afspraak ? afspraak.titel : voorstel ? `Voorstel: ${voorstel.titel}` : "Vrij";
+      return `<div class="blok blok-${soort}" title="${e(van)}–${e(tot)} · ${e(tekst)}"><span>${van}</span>${
+        soort === "gepland" || soort === "voorstel" ? `<em>${e(tekst)}</em>` : ""}</div>`;
+    }).join("")}</div>`).join("");
+    return `<div class="agenda-monteur">${e(monteur)}</div>${cellen}`;
+  }).join("");
+
+  document.getElementById("agenda").innerHTML = `<div></div>${kop}${rijen}`;
+}
+
+async function ververs() {
+  try {
+    const [agenda, acties] = await Promise.all([(await fetch("/api/agenda")).json(), Omnia.acties()]);
+    const sleutel = JSON.stringify([agenda.afspraken.length, agenda.dagen[0], acties.map((a) => a.id)]);
+    if (sleutel !== laatste) { laatste = sleutel; teken(agenda, acties); }
+  } catch (e) { /* server even weg */ }
+}
+
+document.getElementById("reset").addEventListener("click", async () => { await Omnia.reset(); ververs(); });
+ververs();
+setInterval(ververs, 1500);
+</script>
+{% endblock %}

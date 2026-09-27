@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block titel %}OMNIA · {% if met_telefoon %}Demotelefoon{% else %}Plannerscherm{% endif %}{% endblock %}
 {% block inhoud %}
-{% set titel_balk = "Demotelefoon · US-2 en US-3" if met_telefoon else "Plannerscherm · " ~ bedrijfsnaam %}
+{% set titel_balk = "Demotelefoon · US-2, 3 en 4" if met_telefoon else "Plannerscherm · " ~ bedrijfsnaam %}
 {% set actief = "telefoon" if met_telefoon else "planner" %}
 {% include "_balk.html" %}
 
@@ -55,6 +55,8 @@
          Bij een treffer krijgt de klant direct 0800-9009 en een veiligheidstekst, en komt de melding hier bovenaan.</p>
       <p><strong>Uitlezen (US-3).</strong> Anders leest de AI uit tekst en foto het merk, type, foutcode, de klacht en een spoedvoorstel met reden.
          Wat niet te lezen is, blijft leeg: er wordt niets gegokt. Stuur bijvoorbeeld een foto van het typeplaatje van je eigen ketel.</p>
+      <p><strong>Plannen (US-4).</strong> Daarna zoekt OMNIA het eerste vrije blok in de <a href="/agenda">demo-agenda</a>: bij spoed vanaf nu, anders vanaf morgen.
+         De planner keurt goed, kiest een andere tijd of belt zelf. Pas na goedkeuring krijgt de klant tijd en naam van de monteur.</p>
     </details>
     {% endif %}
   </section>
@@ -135,6 +137,7 @@ if (form) {
 }
 
 document.getElementById("reset").addEventListener("click", async () => { await Omnia.reset(); ververs(); });
+Omnia.koppelVoorstelKnoppen(ververs);
 
 ververs();
 setInterval(ververs, 1000);

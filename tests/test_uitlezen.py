@@ -94,7 +94,7 @@ def test_api_met_foto_draait_ai_op_achtergrond(monkeypatch):
                     files={"foto": ("ketel.jpg", jpeg(), "image/jpeg")})
     assert r.json()["route"] == "gewone_rij"
     acties = client.get("/api/acties").json()
-    assert [a["soort"] for a in acties] == ["bericht_in", "gewone_rij", "ai_uitvoer", "bericht_uit"]
+    assert [a["soort"] for a in acties] == ["bericht_in", "gewone_rij", "ai_uitvoer", "bericht_uit", "voorstel"]
     assert client.get(acties[0]["foto_url"]).status_code == 200
 
 

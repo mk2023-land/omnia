@@ -78,6 +78,8 @@ STORIES: list[Story] = [
             "Goedkeuren, andere tijd of zelf bellen",
             "Zonder goedkeuring gaat er niets naar de klant",
         ),
+        status="gesimuleerd",
+        demo_url="/demo/telefoon",
     ),
     Story(
         code="US-5",
