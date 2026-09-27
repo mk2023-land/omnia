@@ -71,3 +71,19 @@ def test_veiligheidsbericht_bevat_noodnummer_en_bedrijfsnaam():
     assert NOODNUMMER_GAS in bericht
     assert "112" in bericht
     assert "Installatiebedrijf Test" in bericht
+
+
+def test_voorbeeldknoppen_doen_wat_ze_beloven():
+    from pathlib import Path
+
+    from app.voorbeelden import GROEPEN
+
+    img = Path(__file__).resolve().parent.parent / "app/static/img/voorbeelden"
+    for groep in GROEPEN:
+        for vb in groep.voorbeelden:
+            if groep.soort == "alarm":
+                assert controleer_gaslucht(vb.tekst), vb.label
+            else:
+                assert controleer_gaslucht(vb.tekst) is None, vb.label
+            if vb.foto:
+                assert (img / vb.foto).exists(), vb.foto

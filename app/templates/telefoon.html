@@ -5,8 +5,9 @@
 {% set actief = "telefoon" if met_telefoon else "planner" %}
 {% include "_balk.html" %}
 
-<main class="wrap demo {% if met_telefoon %}demo-twee{% endif %}">
+<main class="wrap demo {% if met_telefoon %}demo-twee demo-drie{% endif %}">
   {% if met_telefoon %}
+  <div class="linkerkolom">
   <section class="telefoon" aria-label="Telefoon van de klant">
     <div class="telefoon-kop">
       <strong>{{ bedrijfsnaam }}</strong>
@@ -14,11 +15,6 @@
     </div>
     <div class="chat" id="chat">
       <p class="chat-leeg">Stuur een bericht als klant.</p>
-    </div>
-    <div class="snel">
-      <button type="button" data-tekst="Remeha ketel geeft F28, geen warm water">ketel geeft F28</button>
-      <button type="button" data-tekst="mijn ketel maakt een tikkend geluid">tikkend geluid</button>
-      <button type="button" data-tekst="ik ruik gas">ik ruik gas</button>
     </div>
     <div class="bijlage" id="bijlage" hidden>
       <span id="bijlage-naam"></span>
@@ -35,6 +31,26 @@
     </form>
     <p class="telefoon-fout" id="fout" hidden></p>
   </section>
+
+  <section class="voorbeelden" aria-labelledby="vb-kop">
+    <h2 id="vb-kop">Voorbeelden</h2>
+    <p class="sub">Klik om als klant te sturen. Reset tussendoor voor een schone run.</p>
+    {% for groep in groepen %}
+    <div class="vb-groep">
+      <h3>{{ groep.titel }} <small>{{ groep.uitleg }}</small></h3>
+      <div class="vb-knoppen">
+        {% for vb in groep.voorbeelden %}
+        <button type="button" class="vb {% if groep.soort == 'alarm' %}vb-alarm{% endif %}"
+                data-tekst="{{ vb.tekst }}"{% if vb.foto %} data-foto="{{ url_for('static', path='img/voorbeelden/' ~ vb.foto) }}"{% endif %}
+                title="{{ vb.tekst or '(alleen foto)' }}">
+          {% if vb.foto %}<img src="{{ url_for('static', path='img/voorbeelden/' ~ vb.foto) }}" alt="">{% endif %}{{ vb.label }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  </div>
   {% endif %}
 
   <section class="planner" aria-label="Plannerscherm">
@@ -116,8 +132,8 @@ if (form) {
   fotoVeld.addEventListener("change", toonBijlage);
   document.getElementById("bijlage-weg").addEventListener("click", () => { fotoVeld.value = ""; toonBijlage(); });
 
-  async function stuur(tekst) {
-    const foto = fotoVeld.files[0] || null;
+  async function stuur(tekst, voorbeeldFoto = null) {
+    const foto = voorbeeldFoto || fotoVeld.files[0] || null;
     if (!tekst.trim() && !foto) return;
     knop.disabled = true; knop.textContent = "…";
     const fout = await Omnia.stuur(tekst, foto);
@@ -133,7 +149,15 @@ if (form) {
     stuur(veld.value);
     veld.value = "";
   });
-  document.querySelectorAll(".snel button").forEach((b) => b.addEventListener("click", () => stuur(b.dataset.tekst)));
+  document.querySelectorAll(".vb").forEach((b) => b.addEventListener("click", async () => {
+    let foto = null;
+    if (b.dataset.foto) {
+      const blob = await (await fetch(b.dataset.foto)).blob();
+      foto = new File([blob], b.dataset.foto.split("/").pop().split("?")[0], {type: blob.type || "image/jpeg"});
+    }
+    b.classList.add("vb-verstuurd");
+    await stuur(b.dataset.tekst, foto);
+  }));
 }
 
 document.getElementById("reset").addEventListener("click", async () => { await Omnia.reset(); ververs(); });

@@ -17,6 +17,7 @@ from app.core.logboek import Logboek
 from app.core.uitlezen import lees_uit
 from app.core.werkstroom import ai_uitlezen, verwerk_bericht
 from app.stories import BOUWVOLGORDE, STORIES
+from app.voorbeelden import GROEPEN
 
 APP_DIR = Path(__file__).resolve().parent
 
@@ -75,7 +76,7 @@ def demoscherm(request: Request):
 @app.get("/demo/gas", response_class=HTMLResponse)
 def demotelefoon(request: Request):
     return templates.TemplateResponse(
-        request, "telefoon.html", {"bedrijfsnaam": config.BEDRIJFSNAAM, "met_telefoon": True}
+        request, "telefoon.html", {"bedrijfsnaam": config.BEDRIJFSNAAM, "met_telefoon": True, "groepen": GROEPEN}
     )
 
 
