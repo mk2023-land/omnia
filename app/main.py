@@ -22,6 +22,8 @@ APP_DIR = Path(__file__).resolve().parent
 app = FastAPI(title="OMNIA-demo")
 app.mount("/static", StaticFiles(directory=APP_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=APP_DIR / "templates")
+# Versienummer achter het stijlbestand, zodat de browser nooit een oude versie gebruikt.
+templates.env.globals["css_versie"] = int((APP_DIR / "static/css/omnia.css").stat().st_mtime)
 app.state.logboek = Logboek(config.DB_PAD)
 
 

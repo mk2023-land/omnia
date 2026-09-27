@@ -93,6 +93,7 @@ function details(a) {
     case "gasmelding": return `Noodnummer ${esc(a.noodnummer)} gestuurd · herkend: ${esc((a.woorden || []).join(" + "))}`;
     case "ai_fout": case "verzendfout": return esc(a.fout);
     case "ai_uitvoer": return esc(["merk", "type", "foutcode", "klacht"].map((k) => a[k] ? `${k}: ${a[k]}` : null).filter(Boolean).join(" · "));
+    case "gewone_rij": return "Wacht op AI-uitvoer (US-3)";
     default: return esc(a.tekst || "");
   }
 }
