@@ -8,3 +8,9 @@ google-service-account.json
 data/
 testfotos/*
 !testfotos/README.md
+
+# Losse afbeeldingen in de hoofdmap horen niet bij het project
+/*.jpg
+/*.jpeg
+/*.png
+/*.webp
