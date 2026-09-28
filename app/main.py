@@ -60,6 +60,7 @@ def landingspagina(request: Request):
             "stories": STORIES,
             "bouwvolgorde": BOUWVOLGORDE,
             "klaar": klaar,
+            "echt": sum(1 for s in STORIES if s.status == "live"),
             "bedrijfsnaam": config.BEDRIJFSNAAM,
         },
     )
