@@ -54,7 +54,7 @@ STORIES: list[Story] = [
             "Direct 0800-9009 en een veiligheidstekst",
             "Werkt ook als de AI niet bereikbaar is",
         ),
-        status="gesimuleerd",
+        status="live",
         demo_url="/demo/telefoon",
     ),
     Story(
@@ -93,7 +93,7 @@ STORIES: list[Story] = [
             "Eigen cijfers invullen, aannames erbij",
             "Resetknop na elke run",
         ),
-        status="gesimuleerd",
+        status="live",
         demo_url="/demo",
     ),
 ]

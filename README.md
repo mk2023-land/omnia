@@ -34,6 +34,19 @@ Staat de map in OneDrive en ziet de server wijzigingen niet? Start dan met
 | `app/static/` | Huisstijl (`css/omnia.css`) en logo |
 | `tests/` | Tests |
 
+## Echte WhatsApp tijdens de demo
+
+Zet `SIMULATIE_WHATSAPP=false` in `.env` en start naast de server de tunnel:
+
+```powershell
+ngrok http 8765 --url=https://rentable-unthawed-curator.ngrok-free.dev
+.venv\Scripts\python -m uvicorn app.main:app --port 8765
+```
+
+De eigenaar stuurt dan vanaf zijn eigen telefoon berichten naar het testnummer; die verschijnen live op de demoschermen.
+Stuur vlak voor de demo zelf even iets naar het testnummer: WhatsApp laat gewone berichten alleen toe
+binnen 24 uur na het laatste bericht van de ontvanger.
+
 ## Simulatie
 
 Elke externe dienst (Twilio, WhatsApp, Google Agenda) heeft een schakelaar in `.env`.

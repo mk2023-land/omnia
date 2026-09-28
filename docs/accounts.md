@@ -5,9 +5,9 @@ op `false` zodra het account klaarstaat. Sleutels komen **alleen** in `.env`, no
 
 | Dienst | Voor | Status | Nodig in `.env` |
 |---|---|---|---|
-| WhatsApp Cloud API (Meta) | US-1, US-2, US-4 | ✅ Werkt (testnummer) | `WHATSAPP_*` |
+| WhatsApp Cloud API (Meta) | US-1, US-2, US-4 | ✅ Werkt: versturen, sjabloon en ontvangen | `WHATSAPP_*`, `PLANNER_NUMMER` |
 | Anthropic API | US-3 | ✅ Werkt | `ANTHROPIC_API_KEY` (optioneel `CLAUDE_MODEL`, `CLAUDE_EFFORT`) |
-| ngrok | Webhooks (US-1, inkomende WhatsApp) | Nog regelen | `PUBLIEK_ADRES` |
+| ngrok | Webhooks (US-1, inkomende WhatsApp) | ✅ Werkt | `PUBLIEK_ADRES` |
 | Twilio | US-1 | Nog regelen | `TWILIO_*` |
 | Google Agenda | US-4 | Nog regelen | `GOOGLE_*` |
 
@@ -25,6 +25,17 @@ op `false` zodra het account klaarstaat. Sleutels komen **alleen** in `.env`, no
 8. Sjabloon `omnia_gemiste_oproep` (Utility, Dutch) met `{{1}}` = bedrijfsnaam, voor US-1.
 
 Test: `.venv\Scripts\python -m scripts.test_whatsapp`
+
+### Webhook voor inkomende berichten
+
+In de nieuwe begeleide opzet van Meta zit de webhook-instelling in *Step 2*. We stellen hem daarom via de API in
+(eenmalig, met app-ID, App secret en verify token uit `.env`):
+
+1. `POST /{app-id}/subscriptions` met `object=whatsapp_business_account`,
+   `callback_url=<PUBLIEK_ADRES>/whatsapp/webhook`, `verify_token`, `fields=messages` (app-token `app-id|app-secret`).
+2. `POST /{WABA-ID}/subscribed_apps` met het systeemtoken, zodat het WhatsApp-account berichten naar de app stuurt.
+
+Draait ngrok met hetzelfde vaste domein, dan hoeft dit maar één keer.
 
 Let op: een vrij tekstbericht komt alleen aan binnen 24 uur nadat de ontvanger zelf iets naar
 het testnummer stuurde. Daarbuiten is een goedgekeurd sjabloon nodig.
