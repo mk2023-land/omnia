@@ -40,7 +40,7 @@ def maak_voorstel(
         return logboek.schrijf(klant, "geen_voorstel", melding_id=melding_id,
                                reden="Geen vrij blok in de komende twee weken. Bel de klant zelf.")
     blok = vrij[0]
-    return logboek.schrijf(
+    voorstel = logboek.schrijf(
         klant, "voorstel",
         melding_id=melding_id,
         **blok.als_dict(),
@@ -49,6 +49,23 @@ def maak_voorstel(
         titel=_titel(uitlezing),
         spoed=spoed,
     )
+    berichten.meld_planner(
+        logboek,
+        f"Nieuw voorstel ({reden.lower()}):\n{voorstel['titel']}\n{voorstel['tijd_tekst']} · {blok.monteur}\n\n"
+        "Antwoord 1 = goedkeuren, 2 = andere tijd, 3 = zelf bellen.",
+    )
+    return voorstel
+
+
+AFHANDELING = {"goedkeuring", "andere_tijd", "zelf_bellen"}
+
+
+def open_voorstel(logboek: Logboek) -> dict | None:
+    """Het nieuwste voorstel dat nog niet is afgehandeld (voor de planner-telefoon)."""
+    acties = logboek.lees()
+    afgehandeld = {a.get("voorstel_id") for a in acties if a["soort"] in AFHANDELING}
+    open_ = [a for a in acties if a["soort"] == "voorstel" and a["id"] not in afgehandeld]
+    return open_[-1] if open_ else None
 
 
 def _voorstel(logboek: Logboek, voorstel_id: int) -> dict:
@@ -56,7 +73,7 @@ def _voorstel(logboek: Logboek, voorstel_id: int) -> dict:
     if not v or v["soort"] != "voorstel":
         raise PlanningFout("Dit voorstel bestaat niet.")
     afgehandeld = [a for a in logboek.lees(na_id=voorstel_id)
-                   if a.get("voorstel_id") == voorstel_id and a["soort"] in {"goedkeuring", "andere_tijd", "zelf_bellen"}]
+                   if a.get("voorstel_id") == voorstel_id and a["soort"] in AFHANDELING]
     if afgehandeld:
         raise PlanningFout("Dit voorstel is al afgehandeld.")
     return v

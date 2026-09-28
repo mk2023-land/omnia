@@ -100,6 +100,7 @@ const LABELS = {
   goedkeuring: "Goedgekeurd",
   verzendfout: "Verzenden mislukt",
   oproep_gemist: "Gemiste oproep",
+  planner_uit: "Bericht naar planner",
   niet_op_lijst: "Niet op testlijst",
   andere_tijd: "Andere tijd gevraagd",
   zelf_bellen: "Planner belt zelf",
@@ -108,6 +109,7 @@ const LABELS = {
 
 function details(a) {
   switch (a.soort) {
+    case "planner_uit": return esc(a.tekst).slice(0, 90);
     case "oproep_gemist": return `Demonummer gebeld door ${esc(a.nummer)}, niet opgenomen`;
     case "niet_op_lijst": return esc(a.reden);
     case "bericht_in": return `${a.foto_url ? `<a href="${esc(a.foto_url)}" target="_blank" rel="noopener">📷 foto</a> ` : ""}${a.tekst ? `“${esc(a.tekst)}”` : ""}`;

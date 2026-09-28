@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app import config
-from app.core import fotos, planning, rekensom, sms, terugbellen
+from app.core import fotos, inkomend, planning, rekensom, sms, terugbellen
 from app.core.agenda import BLOKKEN, MONTEURS, Agenda, werkdagen
 from app.core.logboek import Logboek
 from app.core.uitlezen import lees_uit
@@ -164,9 +164,33 @@ async def twilio_voice(request: Request, achtergrond: BackgroundTasks):
     if not sms.handtekening_klopt(url, velden, request.headers.get("X-Twilio-Signature", "")):
         raise HTTPException(403, "Ongeldige Twilio-handtekening.")
     nummer = velden.get("From", "")
-    achtergrond.add_task(terugbellen.gemiste_oproep, logboek(request), nummer, nummer)
+    achtergrond.add_task(terugbellen.gemiste_oproep, logboek(request), inkomend.klant_voor(nummer), nummer)
     twiml = '<?xml version="1.0" encoding="UTF-8"?><Response><Reject reason="busy"/></Response>'
     return Response(twiml, media_type="application/xml")
+
+
+def _foto_opslaan(ruw: bytes) -> tuple[bytes, str, str]:
+    jpeg, media_type, naam = fotos.verwerk(ruw, FOTO_MAP)
+    return jpeg, media_type, f"/fotos/{naam}"
+
+
+@app.get("/whatsapp/webhook")
+def whatsapp_verifieer(request: Request):
+    """Meta controleert eenmalig of deze webhook van ons is."""
+    q = request.query_params
+    if q.get("hub.mode") == "subscribe" and config.WHATSAPP_VERIFY_TOKEN and q.get("hub.verify_token") == config.WHATSAPP_VERIFY_TOKEN:
+        return Response(q.get("hub.challenge", ""), media_type="text/plain")
+    raise HTTPException(403, "Verify token klopt niet.")
+
+
+@app.post("/whatsapp/webhook")
+async def whatsapp_bericht(request: Request, achtergrond: BackgroundTasks):
+    body = await request.body()
+    if not inkomend.handtekening_klopt(body, request.headers.get("X-Hub-Signature-256", "")):
+        raise HTTPException(403, "Ongeldige handtekening.")
+    payload = await request.json()
+    achtergrond.add_task(inkomend.verwerk, payload, logboek(request), agenda(request), lees_uit, _foto_opslaan)
+    return {"status": "ontvangen"}
 
 
 @app.post("/api/voorstel/{voorstel_id}/{keuze}")

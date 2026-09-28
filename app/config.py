@@ -53,5 +53,8 @@ TESTONTVANGERS = [n.strip() for n in os.getenv("TESTONTVANGERS", "").split(",") 
     WHATSAPP_TEST_ONTVANGER or DEMO_NUMMER
 ]
 
+# Tweede demotelefoon: de planner keurt voorstellen goed via WhatsApp (1, 2 of 3).
+PLANNER_NUMMER = os.getenv("PLANNER_NUMMER", "")
+
 # Database met het actielog.
 DB_PAD = os.getenv("DB_PAD", str(ROOT / "omnia.db"))

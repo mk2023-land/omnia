@@ -41,3 +41,16 @@ def verstuur_sms(logboek: Logboek, klant: str, nummer: str, tekst: str) -> dict:
         logboek.schrijf(klant, "verzendfout", kanaal="sms", fout=str(fout))
         return logboek.schrijf(klant, "bericht_uit", tekst=tekst, kanaal="sms", gesimuleerd=False, verzonden=False)
     return logboek.schrijf(klant, "bericht_uit", tekst=tekst, kanaal="sms", gesimuleerd=False, verzonden=True, bericht_id=sid)
+
+
+def meld_planner(logboek: Logboek, tekst: str) -> dict | None:
+    """Bericht naar de planner-telefoon (tweede demotelefoon). Doet niets als die niet is ingesteld."""
+    if not config.PLANNER_NUMMER:
+        return None
+    if config.SIMULATIE_WHATSAPP:
+        return logboek.schrijf("planner", "planner_uit", tekst=tekst, gesimuleerd=True)
+    try:
+        whatsapp.stuur_tekst(config.PLANNER_NUMMER, tekst)
+    except (whatsapp.WhatsAppFout, OSError) as fout:
+        return logboek.schrijf("planner", "verzendfout", kanaal="whatsapp", fout=f"Planner: {fout}")
+    return logboek.schrijf("planner", "planner_uit", tekst=tekst, gesimuleerd=False)
